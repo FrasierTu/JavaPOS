@@ -37,7 +37,7 @@ public class BigTab extends JPanel implements MouseListener , ComponentListener 
     public BigTab(final int itemNumber) {
         this.itemCount = itemNumber;
         final Border blackline = BorderFactory.createLineBorder(Color.black);
-        this.setBorder(blackline);
+        //this.setBorder(blackline);
         this.addMouseListener(this);
 
         this.addComponentListener(this);
@@ -156,11 +156,11 @@ public class BigTab extends JPanel implements MouseListener , ComponentListener 
             
             rectX = i*gap+i*tabWidth;
             g.setColor(Color.black);
-            g.drawRect(rectX, 0 , tabWidth, panelHeight);
+            g.drawRect(rectX, 0 , tabWidth, this.panelHeight-1);
             
             if (i == this.selectedIndex) {
                 g.setColor(Color.green);
-                g.fillRect(rectX + 1, 1 , tabWidth-1, panelHeight-1);
+                g.fillRect(rectX + 1, 1 , tabWidth-1, panelHeight-2);
             }
             
             g.setColor(Color.black);

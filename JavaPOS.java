@@ -35,7 +35,7 @@ final public class JavaPOS implements PropertyChangeListener {
 
         final BigTab tab  = new BigTab(tabNumber);
         //JButton rightLabel = new JButton("Right");
-        tab.setBounds(5, 5, 1000, 45);
+        tab.setBounds(5, 5, 995, 45);
         //rightPanel.setSize(280,900);
         //rightPanel.setResizable(false);
         tab.addPropertyChangeListener(this);
@@ -55,9 +55,16 @@ final public class JavaPOS implements PropertyChangeListener {
         contactTableModel.setColumnIdentifiers(columnNames);
         table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         JScrollPane scrollPane = new JScrollPane( table );
-        scrollPane.setBounds(1005,5,255,760);
+        scrollPane.setBounds(1005,5,255,750);
         demo.add(scrollPane);
-
+/*
+        ItemInfoObject itemInfo;
+        for (int index = 0; index < 4; index ++) {
+            itemInfo = new ItemInfoObject();
+            itemInfo.setLocation((10 + itemInfo.getWidth()) * index + 5, 55);
+            demo.add(itemInfo);
+        }
+  */      
         demo.setResizable(false);
         demo.setLocationRelativeTo(null);
         demo.setVisible(true);
