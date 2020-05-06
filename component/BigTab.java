@@ -36,7 +36,7 @@ public class BigTab extends JPanel implements MouseListener , ComponentListener 
 
     public BigTab(final int itemNumber) {
         this.itemCount = itemNumber;
-        final Border blackline = BorderFactory.createLineBorder(Color.black);
+        //final Border blackline = BorderFactory.createLineBorder(Color.black);
         //this.setBorder(blackline);
         this.addMouseListener(this);
 
@@ -55,6 +55,7 @@ public class BigTab extends JPanel implements MouseListener , ComponentListener 
         this.setBorder(blackline);
         // this.addMouseListener(new MyMouseListener());
     }
+
     public void addPropertyChangeListener(PropertyChangeListener l) {
         changes.addPropertyChangeListener(l);
     }
@@ -89,7 +90,7 @@ public class BigTab extends JPanel implements MouseListener , ComponentListener 
     };
 
     public void componentMoved(final ComponentEvent ce) {
-        System.out.println("componentMoved");
+        //System.out.println("componentMoved");
     };
 
     @Override
@@ -150,6 +151,8 @@ public class BigTab extends JPanel implements MouseListener , ComponentListener 
         
         int rectX = 0;
         
+        Color[] colors = {Color.red ,Color.orange ,Color.yellow ,Color.green ,Color.blue ,Color.cyan ,Color.pink};
+        
         for(int i = 0; i < this.itemCount; i++) {
             stringWidth = metrics.stringWidth(Integer.toString(i+1));
             stringX = (tabWidth - stringWidth) / 2;
@@ -159,7 +162,7 @@ public class BigTab extends JPanel implements MouseListener , ComponentListener 
             g.drawRect(rectX, 0 , tabWidth, this.panelHeight-1);
             
             if (i == this.selectedIndex) {
-                g.setColor(Color.green);
+                g.setColor(colors[i]);
                 g.fillRect(rectX + 1, 1 , tabWidth-1, panelHeight-2);
             }
             
