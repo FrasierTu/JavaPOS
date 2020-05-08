@@ -31,17 +31,18 @@ public class SpicyLevel extends JPanel implements ComponentListener {
         // System.out.println("componentResized");
         final int width = getWidth();
         final int height = getHeight();
-
         final JLabel lLabel = new JLabel("\u25C0");// +"\t" + levels[0]+ "\t" + "\u25B6");
         final Font labelFont = new Font("Serif", Font.PLAIN, 29);
+        final JLabel dummyLabel = new JLabel("我");
+        final int charWidth = dummyLabel.getFontMetrics(labelFont).stringWidth(dummyLabel.getText());
+        final int charHeight = dummyLabel.getFontMetrics(labelFont).getHeight();
+
+        dummyLabel.setFont(labelFont);
         lLabel.setFont(labelFont);
 
-        String labelText = lLabel.getText();
-        int stringWidth = lLabel.getFontMetrics(labelFont).stringWidth(labelText);
-        int stringHeight = lLabel.getFontMetrics(labelFont).getHeight();
         final Border greenline = BorderFactory.createLineBorder(Color.green);
         lLabel.setBorder(greenline);
-        lLabel.setSize(stringWidth+5, stringHeight);
+        lLabel.setSize(charWidth+5, charHeight);
         lLabel.setLocation(2, 4);
         lLabel.setHorizontalAlignment(JLabel.CENTER);
         //rightArrow.setBounds( width - buttonWidth, 0, buttonWidth, height);
@@ -58,12 +59,9 @@ public class SpicyLevel extends JPanel implements ComponentListener {
 
         final JLabel rLabel = new JLabel("\u25B6");
         rLabel.setFont(labelFont);
-        labelText = rLabel.getText();
-        stringWidth = rLabel.getFontMetrics(labelFont).stringWidth(labelText);
-        stringHeight = rLabel.getFontMetrics(labelFont).getHeight();
         rLabel.setBorder(greenline);
-        rLabel.setSize(stringWidth+5, stringHeight);
-        rLabel.setLocation(width - stringWidth - 8, 4);
+        rLabel.setSize(charWidth+5, charHeight);
+        rLabel.setLocation(width - charWidth - 8, 4);
         this.add(rLabel);
         rLabel.addMouseListener(new MouseAdapter() {
             public void mouseClicked(MouseEvent e) {

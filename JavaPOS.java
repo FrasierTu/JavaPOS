@@ -43,13 +43,12 @@ final public class JavaPOS implements PropertyChangeListener {
         final int tabNumber = 1;
 
         final BigTab tab  = new BigTab(tabNumber);
-        //JButton rightLabel = new JButton("Right");
         tab.setBounds(5, 5, 995, 45);
-        //rightPanel.setSize(280,900);
-        //rightPanel.setResizable(false);
         tab.addPropertyChangeListener(this);
-        //demo.add(rightPanel, BorderLayout.EAST);
         demo.add(tab);
+        
+        final int itemWidth = 160;
+        final int itemHeight = 150;
         
         Color[] colors = {Color.red ,Color.orange ,Color.yellow ,Color.green ,Color.blue ,Color.cyan ,Color.pink};
         JPanel panel;
@@ -59,9 +58,9 @@ final public class JavaPOS implements PropertyChangeListener {
             panel.setBounds(5, 55, 995, 800);
             panel.setBackground(colors[index]);
 
-            int[] prices = {100,150};
+            int[] prices = {140,150};
             ItemInfoObject item = new ItemInfoObject("滷大腸", prices);
-            item.setBounds(1, 1, 100, 120);
+            item.setBounds(1, 1, itemWidth, itemHeight);
             panel.add(item);
 
             //panel.setVisible(false);
