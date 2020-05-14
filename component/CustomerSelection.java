@@ -17,27 +17,34 @@ import java.awt.event.MouseEvent;
 import java.beans.PropertyChangeSupport;
 import java.beans.PropertyChangeListener;
 
-public class ItemInfoObject extends JPanel implements ComponentListener {
+import java.util.List;
+import java.util.ArrayList;
+
+public class CustomerSelection extends JPanel implements ComponentListener {
     private static final long serialVersionUID = 0x97645L;
+    JLabel itemPriceLabel;
+    JLabel itemCountLabel;
+
     public String title = "";
-    private int[] priceList;
-    private int[] itemCount;
-    int order = 0;
+    public List<Integer> priceList;
+    public List<Integer> itemCount;
+    public int ID = 0;
     private int itemIndex = 0;
     private PropertyChangeSupport changes = new PropertyChangeSupport(this);
 
-    public ItemInfoObject() {
+    public CustomerSelection() {
         this.addComponentListener(this);
     }
 
-    public ItemInfoObject(final String title, final int[] priceList) {
+    public CustomerSelection(final String title, final List<Integer> priceList) {
         this.title = title;
-        this.priceList = new int[priceList.length];
-        System.arraycopy(priceList, 0, this.priceList, 0, priceList.length);
-        this.itemCount = new int[priceList.length];
+        this.priceList = new ArrayList<>();
+        this.priceList.addAll(priceList);
 
-        for(int index = 0 ; index < this.itemCount.length; index++) {  
-            this.itemCount[index] = 0;
+        this.itemCount = new ArrayList<>();
+
+        for(int index = 0 ; index < this.priceList.size(); index++) {  
+            this.itemCount.add(0);
         }
 
         this.setLayout(null);
@@ -62,8 +69,8 @@ public class ItemInfoObject extends JPanel implements ComponentListener {
         final Border blackline = BorderFactory.createLineBorder(Color.black);
         final Font labelFont = new Font("Serif", Font.PLAIN, 27);
         final JLabel dummyLabel = new JLabel("我");
-        final JLabel itemPriceLabel = new JLabel(String.valueOf(this.priceList[0]));// +"\t" + levels[0]+ "\t" + "\u25B6");
-        final JLabel itemCountLabel = new JLabel(String.valueOf(this.itemCount[0]));// +"\t" + levels[0]+ "\t" + "\u25B6");
+        itemPriceLabel = new JLabel(String.valueOf(this.priceList.get(0)));// +"\t" + levels[0]+ "\t" + "\u25B6");
+        itemCountLabel = new JLabel(String.valueOf(this.itemCount.get(0)));// +"\t" + levels[0]+ "\t" + "\u25B6");
 
         dummyLabel.setFont(labelFont);
         
@@ -94,12 +101,14 @@ public class ItemInfoObject extends JPanel implements ComponentListener {
         this.add(lChoice);
         lChoice.addMouseListener(new MouseAdapter() {
             public void mouseClicked(MouseEvent e) {
-                itemIndex--;
-                if (itemIndex < 0) {
-                    itemIndex = priceList.length - 1;
-                }
-                itemPriceLabel.setText(String.valueOf(priceList[itemIndex]));
-                itemCountLabel.setText(String.valueOf(itemCount[itemIndex]));
+                new Thread(() -> {
+                    itemIndex--;
+                    if (itemIndex < 0) {
+                        itemIndex = priceList.size() - 1;
+                    }
+                    itemPriceLabel.setText(String.valueOf(priceList.get(itemIndex)));
+                    itemCountLabel.setText(String.valueOf(itemCount.get(itemIndex)));
+                }).start();
             }
         });
 
@@ -115,12 +124,14 @@ public class ItemInfoObject extends JPanel implements ComponentListener {
         this.add(rChoice);
         rChoice.addMouseListener(new MouseAdapter() {
             public void mouseClicked(MouseEvent e) {
-                itemIndex++;
-                if (itemIndex >= priceList.length) {
-                    itemIndex = 0;
-                }
-                itemPriceLabel.setText(String.valueOf(priceList[itemIndex]));
-                itemCountLabel.setText(String.valueOf(itemCount[itemIndex]));
+                new Thread(() -> {
+                    itemIndex++;
+                    if (itemIndex >= priceList.size()) {
+                        itemIndex = 0;
+                    }
+                    itemPriceLabel.setText(String.valueOf(priceList.get(itemIndex)));
+                    itemCountLabel.setText(String.valueOf(itemCount.get(itemIndex)));
+                }).start();
             }
         });
 
@@ -146,14 +157,17 @@ public class ItemInfoObject extends JPanel implements ComponentListener {
         this.add(minus);
         minus.addMouseListener(new MouseAdapter() {
             public void mouseClicked(MouseEvent e) {
-                int count = itemCount[itemIndex];
+                new Thread(() -> {
+                    int oldCount = itemCount.get(itemIndex);
 
-                if (count < 1) {
-                    return;
-                }
-                itemCount[itemIndex]--;
-                itemCountLabel.setText(String.valueOf(itemCount[itemIndex]));
-                changes.firePropertyChange("ItemQuantityChanged", count,itemCount[itemIndex]);
+                    if (oldCount < 1) {
+                        return;
+                    }
+                    int count = oldCount-1;
+                    itemCount.set(itemIndex, count);
+                    itemCountLabel.setText(String.valueOf(itemCount.get(itemIndex)));
+                    changes.firePropertyChange("SelectionChanged", oldCount,count);
+                }).start();
             }
         });
 
@@ -169,10 +183,15 @@ public class ItemInfoObject extends JPanel implements ComponentListener {
         this.add(plus);
         plus.addMouseListener(new MouseAdapter() {
             public void mouseClicked(MouseEvent e) {
-                int count = itemCount[itemIndex];
-                itemCount[itemIndex]++;
-                itemCountLabel.setText(String.valueOf(itemCount[itemIndex]));
-                changes.firePropertyChange("ItemQuantityChanged", count,itemCount[itemIndex]);
+                new Thread(() -> {
+                    int oldCount = itemCount.get(itemIndex);
+                    int count = oldCount +1;
+                
+                    itemCount.set(itemIndex, count);
+                    itemCountLabel.setText(String.valueOf(itemCount.get(itemIndex)));
+                    changes.firePropertyChange("SelectionChanged", oldCount,count);
+                    }
+                ).start();   
             }
         });
 
@@ -198,5 +217,13 @@ public class ItemInfoObject extends JPanel implements ComponentListener {
         //System.out.println("componentMoved");
     };
 
+    public void clearAll() {
+        this.itemIndex = 0;
+        for(int index = 0; index < this.itemCount.size(); index++) {
+            itemCount.set(index, 0);
+        }
+        this.itemPriceLabel.setText(String.valueOf(priceList.get(itemIndex)));
+        this.itemCountLabel.setText(String.valueOf(itemCount.get(itemIndex)));
+    }
 }
 

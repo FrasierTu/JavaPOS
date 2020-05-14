@@ -5,14 +5,14 @@ import javax.swing.JLabel;
 import java.awt.Color;
 import javax.swing.BorderFactory;
 import javax.swing.border.Border;
-import javax.swing.JPanel;
+//import javax.swing.JPanel;
 import java.awt.event.ComponentEvent;
 import java.awt.event.ComponentListener;
 
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
-public class SpicyLevel extends JPanel implements ComponentListener {
+public class SpicyLevel extends JLabel implements ComponentListener {
     private static final long serialVersionUID = 0x3433L;
     private int spicyLevel = 0;
     String levels[] = {"不辣","小辣","中辣","大辣"};
@@ -20,12 +20,29 @@ public class SpicyLevel extends JPanel implements ComponentListener {
 
     public SpicyLevel() {
         this.setLayout(null);
-        final Border blackline = BorderFactory.createLineBorder(Color.black);
-        this.setBorder(blackline);
-        // this.addMouseListener(new MyMouseListener());
+        final Font font = new Font("Serif", Font.PLAIN, 29);
+        final Border blueline = BorderFactory.createLineBorder(Color.cyan);
+        setFont(font);
+        setBorder(blueline);
+
         this.addComponentListener(this);
+        addMouseListener(new MouseAdapter() {
+            public void mouseClicked(MouseEvent e) {
+                spicyLevel++;
+                if (spicyLevel >= levels.length) {
+                    spicyLevel = 0;
+                }
+                setText(levels[spicyLevel]);
+            }
+        });
     }
 
+    public void componentResized(final ComponentEvent e) {
+        this.setHorizontalAlignment(JLabel.CENTER);
+        this.setText(this.levels[this.spicyLevel]);
+    }
+    
+    /*
     public void componentResized(final ComponentEvent e) {
         // Perform calculation here
         // System.out.println("componentResized");
@@ -83,7 +100,7 @@ public class SpicyLevel extends JPanel implements ComponentListener {
 
         this.add(levelLabel);
     }
-
+*/
     public void componentHidden(final ComponentEvent ce) {
     };
 

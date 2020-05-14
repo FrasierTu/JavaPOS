@@ -30,7 +30,7 @@ public class BigTab extends JPanel implements MouseListener , ComponentListener 
     
     ArrayList<Integer> list = new ArrayList<>();
     
-    final int gap = 2;
+    final int gap = 3;
 
     private PropertyChangeSupport changes = new PropertyChangeSupport(this);
 
@@ -106,26 +106,29 @@ public class BigTab extends JPanel implements MouseListener , ComponentListener 
     }
 
     public void mousePressed(final MouseEvent event) {
-        // System.out.println("pressed");
-        final int x = event.getX();
-        //final int y = event.getY();
-
-        final int oldIndex = selectedIndex;
-
-        for (int i = 0; i < this.itemCount; i++) {
-            if (x < list.get(i)) {
-                selectedIndex = i;
-                break;
+        new Thread(() -> {
+            final int x = event.getX();
+            //final int y = event.getY();
+    
+            final int oldIndex = selectedIndex;
+    
+            for (int i = 0; i < this.itemCount; i++) {
+                if (x < list.get(i)) {
+                    selectedIndex = i;
+                    break;
+                }
             }
-        }
-
-        /*
-         * for(int i = 0; i < this.itemCount; i++) { if (x < (i*gap+i*this.tabWidth +
-         * this.tabWidth)) { indexSelected = i; break; } }
-         */
-
-        this.repaint();
-        changes.firePropertyChange("TabSelectedIndex", oldIndex,selectedIndex);
+    
+            /*
+             * for(int i = 0; i < this.itemCount; i++) { if (x < (i*gap+i*this.tabWidth +
+             * this.tabWidth)) { indexSelected = i; break; } }
+             */
+    
+            this.repaint();
+            changes.firePropertyChange("TabSelectedIndex", oldIndex,selectedIndex);
+            }
+        ).start();
+        // System.out.println("pressed");
     }
 
     public void mouseReleased(final MouseEvent event) {
