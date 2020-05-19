@@ -1,0 +1,4 @@
+Mainfest-version: 1.0
+Main-Class: JavaPOS
+Class-Path: .JavaPOS.jar
+

@@ -13,10 +13,9 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
 public class SpicyLevel extends JLabel implements ComponentListener {
-    private static final long serialVersionUID = 0x3433L;
+    private static final long serialVersionUID = 0x2433L;
     private int spicyLevel = 0;
     String levels[] = {"不辣","小辣","中辣","大辣"};
-    final JLabel levelLabel = new JLabel(this.levels[0]);
 
     public SpicyLevel() {
         this.setLayout(null);
@@ -112,12 +111,12 @@ public class SpicyLevel extends JLabel implements ComponentListener {
         System.out.println("componentMoved");
     };
 
-    public String getLevel() {
+    public String get() {
         return levels[spicyLevel];
     }
 
-    public void setLevel(int level) {
+    public void set(int level) {
         this.spicyLevel = level;
-        this.levelLabel.setText(levels[spicyLevel]);
+        setText(levels[spicyLevel]);
     }
 }

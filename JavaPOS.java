@@ -19,10 +19,11 @@ import java.awt.Color;
 import java.awt.Component;
 //import java.io.FileNotFoundException;
 import java.io.FileInputStream;
-//import java.io.IOException;
-//import java.io.InputStream;
+import java.io.FileOutputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 
 import java.text.SimpleDateFormat;  
 import java.util.Date;  
@@ -50,15 +51,8 @@ final public class JavaPOS implements PropertyChangeListener {
     List<CustomerSelection> customerSelections = new ArrayList<CustomerSelection>();
     JTable table;
     JLabel confirmButton;
+    SpicyLevel spicyLevel;
     public static void main(final String[] args) {
-        /*
-        try{
-            final Path tempFile = Files.createTempFile("tempfiles", ".tmp");
-            System.out.println("tempFile = " + tempFile);
-        } catch (final Exception e) {
-            e.printStackTrace();
-        }
-*/
         String desktopFolder = System.getProperty("user.home") + "/Desktop";
 
         String csvFilePath = desktopFolder+"/1.csv";
@@ -83,6 +77,10 @@ final public class JavaPOS implements PropertyChangeListener {
                 return;
             }
         }
+
+        date = null;
+        formatter = null;
+        System.gc();
 
         new JavaPOS();
     }
@@ -130,6 +128,7 @@ final public class JavaPOS implements PropertyChangeListener {
             }
             
             reader.close();
+            csvFile.close();
 
         } catch(Exception e){
             // TODO Auto-generated catch block
@@ -146,7 +145,7 @@ final public class JavaPOS implements PropertyChangeListener {
         
         int tabCount = 0;
         final int itemWidth = 160;
-        final int itemHeight = 150;
+        final int itemHeight = 151;
         final int panelWidth = 995;
         final int panelHeight = 800;
         
@@ -154,7 +153,7 @@ final public class JavaPOS implements PropertyChangeListener {
         final int yGap = 5;
         
         int x=0,y=yGap;
-        int itemCount = 0;
+        //int itemCount = 0;
 
         Color[] colors = {Color.red ,Color.orange ,Color.yellow ,Color.green ,Color.blue ,Color.cyan ,Color.pink};
         JPanel panel = null;
@@ -190,8 +189,7 @@ final public class JavaPOS implements PropertyChangeListener {
             }
             
             CustomerSelection selection = new CustomerSelection(item.title, item.prices);
-            selection.ID = itemCount;
-            itemCount++;
+            //itemCount++;
             selection.setBounds(x, y, itemWidth, itemHeight);
             selection.addPropertyChangeListener(this);
             //this.customerSelections.add(selection);
@@ -227,7 +225,7 @@ final public class JavaPOS implements PropertyChangeListener {
         tab.addPropertyChangeListener(this);
         demo.add(tab);
 
-        String[] columnNames = {"刪除", "品名 單價 數量", "小計"};
+        String[] columnNames = {"刪除", "品項 單價 數量", "小計"};
         this.table = new JTable() {
             private static final long serialVersionUID = 0x276L;
 
@@ -281,17 +279,9 @@ final public class JavaPOS implements PropertyChangeListener {
         scrollPane.setBounds(1005,5,255,720);
         demo.add(scrollPane);
 
-/*
-        ItemInfoObject itemInfo;
-        for (int index = 0; index < 4; index ++) {
-            itemInfo = new ItemInfoObject();
-            itemInfo.setLocation((10 + itemInfo.getWidth()) * index + 5, 55);
-            demo.add(itemInfo);
-        }
-  */      
         Rectangle tableBounds = scrollPane.getBounds();
         
-        SpicyLevel spicyLevel = new SpicyLevel();
+        this.spicyLevel = new SpicyLevel();
         spicyLevel.setBounds(tableBounds.x,tableBounds.y + tableBounds.height + 5,tableBounds.width, 45);
         demo.add(spicyLevel);
 
@@ -316,10 +306,34 @@ final public class JavaPOS implements PropertyChangeListener {
             @Override
             public void mouseClicked(MouseEvent e) {
                 JTable table = (JTable) e.getSource();
-                int column = table.columnAtPoint(e.getPoint());
-                int row = table.rowAtPoint(e.getPoint());
-                System.out.println("Column: "+column);
-                System.out.println("Row: "+row);
+                int tableColumn = table.columnAtPoint(e.getPoint());
+                int tableRow = table.rowAtPoint(e.getPoint());
+
+                if (tableColumn != 0) {
+                    return;
+                }
+
+                int count = 0;
+                for(JPanel panel: itemPanels) {
+                    Component[] components = panel.getComponents();
+                    int componentNumber = components.length;
+                    for(int index = 0; index < componentNumber; index++) {
+                        CustomerSelection selection = (CustomerSelection)components[index];
+    
+                        for(int itemIndex = 0; itemIndex<selection.itemCount.size(); itemIndex++) {
+                            if (selection.itemCount.get(itemIndex) != 0) {
+                                if(count == tableRow) {
+                                    selection.clearItem(itemIndex);
+                                    new Thread(() -> {
+                                        SelectionChanged();
+                                    }).start();
+                                    return;
+                                }
+                                count++;
+                            }
+                       }
+                    }
+                }
             }
         });
         itemPanels.get(0).setVisible(true);
@@ -346,7 +360,7 @@ final public class JavaPOS implements PropertyChangeListener {
         this.confirmButton.setBounds(spicyLevelBounds.x + 70 ,spicyLevelBounds.y + spicyLevelBounds.height + 15,spicyLevelBounds.width - 70, 65);
         this.confirmButton.setBorder(blackline);
         this.confirmButton.setHorizontalAlignment(JLabel.CENTER);
-        this.confirmButton.setFont(new Font("Serif", Font.PLAIN, 37));
+        this.confirmButton.setFont(new Font("Serif", Font.PLAIN, 39));
         this.confirmButton.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
@@ -378,6 +392,95 @@ final public class JavaPOS implements PropertyChangeListener {
                     return;
                 }
 
+                Date date = new Date();
+                String desktopFolder = System.getProperty("user.home") + "/Desktop";
+                SimpleDateFormat formatter = new SimpleDateFormat("yyyy");  
+                String yearFolder = desktopFolder+"/"+formatter.format(date);
+                File tmpFile = new File(yearFolder);
+                if(false == tmpFile.exists()) { 
+                    boolean bool = tmpFile.mkdirs();
+                    // do something
+                    if(false == bool){
+                        JOptionPane.showMessageDialog(null, "磁碟問題");
+                        date = null;
+                        formatter = null;
+                        tmpFile = null;
+                        System.gc();
+                        return;
+                    }
+                }
+                formatter = new SimpleDateFormat("MM");  
+                String mothFolder = yearFolder+"/"+formatter.format(date);
+                tmpFile = new File(mothFolder);
+                if(false == tmpFile.exists()) { 
+                    boolean bool = tmpFile.mkdirs();
+                    // do something
+                    if(false == bool){
+                        JOptionPane.showMessageDialog(null, "磁碟問題，程式結束");
+                        date = null;
+                        formatter = null;
+                        tmpFile = null;
+                        System.gc();
+                        return;
+                    }
+                }
+
+                formatter = new SimpleDateFormat("dd");  
+                String csvFilePath = mothFolder+"/"+formatter.format(date) + ".csv";  
+                
+                try {
+                    OutputStreamWriter csvFile;
+                    BufferedWriter csvWriter;
+
+                    tmpFile = new File(csvFilePath);
+                    if(false == tmpFile.exists()) {
+                        csvFile = new OutputStreamWriter(new FileOutputStream(csvFilePath),"UTF-8");
+                        csvWriter = new BufferedWriter(csvFile);
+                        csvWriter.write("品項(單價)"+","+"數量"+","+"小計"+"\n");
+                    }
+                    else {
+                        csvFile = new OutputStreamWriter(new FileOutputStream(csvFilePath, true),"UTF-8");
+                        csvWriter = new BufferedWriter(csvFile);
+                    }
+                    
+                    formatter = new SimpleDateFormat("HH點mm分ss秒");
+                    csvWriter.write("\n"+formatter.format(date)+"\n");
+
+                    int number,price ,subTotal ;
+                    String transation2csv = "";
+
+                    for(JPanel panel: itemPanels) {
+                        Component[] components = panel.getComponents();
+                        int componentNumber = components.length;
+                        for(int index = 0; index < componentNumber; index++) {
+                            CustomerSelection selection = (CustomerSelection)components[index];
+                            for(int itemIndex = 0; itemIndex<selection.itemCount.size(); itemIndex++) {
+                                number = selection.itemCount.get(itemIndex);
+                                if( number > 0 ) {
+                                    price = selection.priceList.get(itemIndex);
+                                    subTotal = number * price;
+
+                                    transation2csv = selection.title+"("+String.valueOf(price)+")"+","+String.valueOf(number)+","+String.valueOf(subTotal);
+                                    csvWriter.write(transation2csv+"\n");
+                                    //totalPrice += subTotal;
+                                }
+                            }
+                        }
+                    }
+                    csvWriter.write(spicyLevel.get() +"\n");
+
+                    csvWriter.close();
+                    csvFile.close();
+                } catch(Exception e1){
+                    // TODO Auto-generated catch block
+                    e1.printStackTrace();
+                }
+                
+                tmpFile = null;
+                date = null;
+                formatter = null;
+                System.gc();
+
                 new Thread(() -> {
                     ClearTransation();
                 }).start();
@@ -401,10 +504,43 @@ final public class JavaPOS implements PropertyChangeListener {
             DefaultTableModel tableModel = (DefaultTableModel) this.table.getModel();
             tableModel.setRowCount(0);
             tableModel.fireTableDataChanged();
-            this.confirmButton.setText("0(0)"); 
+            this.confirmButton.setText("0(0)");
+            this.spicyLevel.set(0);
         }).start();
     }
 
+    private void SelectionChanged() {
+        DefaultTableModel tableModel = (DefaultTableModel) this.table.getModel();
+        tableModel.setRowCount(0);
+        String[] data = new String[3];
+        int selectedItems = 0;
+        int totalMoney = 0;
+
+        for(JPanel panel: this.itemPanels) {
+            Component[] components = panel.getComponents();
+            int componentNumber = components.length;
+            for(int index = 0; index < componentNumber; index++) {
+                CustomerSelection selection = (CustomerSelection)components[index];
+
+                for(int itemIndex = 0; itemIndex<selection.itemCount.size(); itemIndex++) {
+                    int number = selection.itemCount.get(itemIndex);
+                    if( number > 0 ) {
+                        data[0] = "\u274C";
+                        data[1] = selection.title+"("+ String.valueOf(selection.priceList.get(itemIndex))+")"+" * "+String.valueOf(number);
+                        data[2] = String.valueOf(selection.priceList.get(itemIndex)*number);
+
+                        tableModel.addRow(data);
+                        selectedItems++;
+                        totalMoney += (selection.priceList.get(itemIndex)*number);
+                    }
+                }
+            }
+
+        }
+        tableModel.fireTableDataChanged();
+        String theString = String.valueOf(totalMoney)+"("+String.valueOf(selectedItems)+")";
+        this.confirmButton.setText(theString);
+    }
     @Override
     public void propertyChange(final PropertyChangeEvent evt) {
         if (evt.getPropertyName() == "TabSelectedIndex") {
@@ -420,36 +556,7 @@ final public class JavaPOS implements PropertyChangeListener {
 
         if (evt.getPropertyName() == "SelectionChanged") {
             new Thread(() -> {
-                DefaultTableModel tableModel = (DefaultTableModel) this.table.getModel();
-                tableModel.setRowCount(0);
-                String[] data = new String[3];
-                int selectedItems = 0;
-                int totalMoney = 0;
-
-                for(JPanel panel: this.itemPanels) {
-                    Component[] components = panel.getComponents();
-                    int componentNumber = components.length;
-                    for(int index = 0; index < componentNumber; index++) {
-                        CustomerSelection selection = (CustomerSelection)components[index];
-    
-                        for(int itemIndex = 0; itemIndex<selection.itemCount.size(); itemIndex++) {
-                            int number = selection.itemCount.get(itemIndex);
-                            if( number > 0 ) {
-                                data[0] = "\u274C";
-                                data[1] = selection.title+"("+ String.valueOf(selection.priceList.get(itemIndex))+")"+" * "+String.valueOf(number);
-                                data[2] = String.valueOf(selection.priceList.get(itemIndex)*number);
-    
-                                tableModel.addRow(data);
-                                selectedItems++;
-                                totalMoney += (selection.priceList.get(itemIndex)*number);
-                            }
-                        }
-                    }
-
-                }
-                tableModel.fireTableDataChanged();
-                String theString = String.valueOf(totalMoney)+"("+String.valueOf(selectedItems)+")";
-                this.confirmButton.setText(theString);
+                SelectionChanged();
             }).start();
         }
     }
