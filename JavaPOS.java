@@ -1,8 +1,10 @@
-import javax.swing.*;
 import component.*;
 
-//import java.nio.file.Path;
-//import java.nio.file.Files;
+import javax.swing.*;
+
+import java.nio.file.Paths;
+import java.nio.file.Path;
+import java.nio.file.Files;
 import java.io.File;
 
 import java.beans.PropertyChangeListener;
@@ -30,6 +32,8 @@ import java.util.Date;
 
 import javax.swing.table.DefaultTableCellRenderer;
 import java.awt.Font;
+//import java.awt.FontMetrics;
+import java.awt.Graphics2D;
 
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -37,6 +41,16 @@ import java.awt.event.MouseEvent;
 import javax.swing.BorderFactory;
 import javax.swing.border.Border;
 
+//import java.awt.print.PrinterJob;
+//import java.awt.print.PrinterException;
+
+import java.awt.image.WritableRaster;
+import java.awt.image.DataBufferByte;
+
+import java.awt.image.BufferedImage;
+import javax.imageio.ImageIO;
+
+import java.io.ByteArrayOutputStream;
 
 final class Item {
     public String title;
@@ -392,98 +406,12 @@ final public class JavaPOS implements PropertyChangeListener {
                     return;
                 }
 
-                Date date = new Date();
-                String desktopFolder = System.getProperty("user.home") + "/Desktop";
-                SimpleDateFormat formatter = new SimpleDateFormat("yyyy");  
-                String yearFolder = desktopFolder+"/"+formatter.format(date);
-                File tmpFile = new File(yearFolder);
-                if(false == tmpFile.exists()) { 
-                    boolean bool = tmpFile.mkdirs();
-                    // do something
-                    if(false == bool){
-                        JOptionPane.showMessageDialog(null, "磁碟問題");
-                        date = null;
-                        formatter = null;
-                        tmpFile = null;
-                        System.gc();
-                        return;
-                    }
-                }
-                formatter = new SimpleDateFormat("MM");  
-                String mothFolder = yearFolder+"/"+formatter.format(date);
-                tmpFile = new File(mothFolder);
-                if(false == tmpFile.exists()) { 
-                    boolean bool = tmpFile.mkdirs();
-                    // do something
-                    if(false == bool){
-                        JOptionPane.showMessageDialog(null, "磁碟問題，程式結束");
-                        date = null;
-                        formatter = null;
-                        tmpFile = null;
-                        System.gc();
-                        return;
-                    }
-                }
-
-                formatter = new SimpleDateFormat("dd");  
-                String csvFilePath = mothFolder+"/"+formatter.format(date) + ".csv";  
+                final Date date = new Date();
                 
-                try {
-                    OutputStreamWriter csvFile;
-                    BufferedWriter csvWriter;
+                SaveToFile(date);
+                DoPrinting(date);
 
-                    tmpFile = new File(csvFilePath);
-                    if(false == tmpFile.exists()) {
-                        csvFile = new OutputStreamWriter(new FileOutputStream(csvFilePath),"UTF-8");
-                        csvWriter = new BufferedWriter(csvFile);
-                        csvWriter.write("品項(單價)"+","+"數量"+","+"小計"+"\n");
-                    }
-                    else {
-                        csvFile = new OutputStreamWriter(new FileOutputStream(csvFilePath, true),"UTF-8");
-                        csvWriter = new BufferedWriter(csvFile);
-                    }
-                    
-                    formatter = new SimpleDateFormat("HH點mm分ss秒");
-                    csvWriter.write("\n"+formatter.format(date)+"\n");
-
-                    int number,price ,subTotal ;
-                    String transation2csv = "";
-
-                    for(JPanel panel: itemPanels) {
-                        Component[] components = panel.getComponents();
-                        int componentNumber = components.length;
-                        for(int index = 0; index < componentNumber; index++) {
-                            CustomerSelection selection = (CustomerSelection)components[index];
-                            for(int itemIndex = 0; itemIndex<selection.itemCount.size(); itemIndex++) {
-                                number = selection.itemCount.get(itemIndex);
-                                if( number > 0 ) {
-                                    price = selection.priceList.get(itemIndex);
-                                    subTotal = number * price;
-
-                                    transation2csv = selection.title+"("+String.valueOf(price)+")"+","+String.valueOf(number)+","+String.valueOf(subTotal);
-                                    csvWriter.write(transation2csv+"\n");
-                                    //totalPrice += subTotal;
-                                }
-                            }
-                        }
-                    }
-                    csvWriter.write(spicyLevel.get() +"\n");
-
-                    csvWriter.close();
-                    csvFile.close();
-                } catch(Exception e1){
-                    // TODO Auto-generated catch block
-                    e1.printStackTrace();
-                }
-                
-                tmpFile = null;
-                date = null;
-                formatter = null;
-                System.gc();
-
-                new Thread(() -> {
-                    ClearTransation();
-                }).start();
+                ClearTransation();
             }
         });
         
@@ -507,6 +435,205 @@ final public class JavaPOS implements PropertyChangeListener {
             this.confirmButton.setText("0(0)");
             this.spicyLevel.set(0);
         }).start();
+    }
+
+    private void DoPrinting(Date date) {
+        //final int printWidthDots = 80 / 25.4 * 203 = 639;
+        // font size 128 ,MaxDescent 26
+
+        //final int printWidthDots = 630;
+        /*
+        final int titleFontSize = 32;
+        final int contentFontSize = 24;
+
+        //title image
+        this.StringToESC("柯黑鴨", "標楷體" , titleFontSize);
+
+        int number,price ,subTotal ;
+        String transation2Printer = "";
+        
+        for(JPanel panel: itemPanels) {
+            Component[] components = panel.getComponents();
+            int componentNumber = components.length;
+            for(int index = 0; index < componentNumber; index++) {
+                CustomerSelection selection = (CustomerSelection)components[index];
+                for(int itemIndex = 0; itemIndex<selection.itemCount.size(); itemIndex++) {
+                    number = selection.itemCount.get(itemIndex);
+                    if( number > 0 ) {
+                        price = selection.priceList.get(itemIndex);
+                        subTotal = number * price;
+
+                        transation2Printer = selection.title+"("+String.valueOf(price)+")"+",數量:"+String.valueOf(number)+",小計:"+String.valueOf(subTotal);
+                        this.StringToESC(transation2Printer, "標楷體" , contentFontSize);
+                    }
+                }
+            }
+        }
+
+        String spyceLevel = this.spicyLevel.get();
+        this.StringToESC(spyceLevel, "標楷體" , contentFontSize);
+
+        SimpleDateFormat formatter = new SimpleDateFormat("yyyy年MM月dd日HH點mm分ss秒"); 
+        String dateTimeString = formatter.format(date);
+        this.StringToESC(dateTimeString, "標楷體" , contentFontSize);
+
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream( );
+*/
+        int number,price ,subTotal ,totalPrice ;
+        String transation2Printer = "";
+        List<String> content = new ArrayList<>();
+
+        totalPrice = 0;
+        for(JPanel panel: itemPanels) {
+            Component[] components = panel.getComponents();
+            int componentNumber = components.length;
+            for(int index = 0; index < componentNumber; index++) {
+                CustomerSelection selection = (CustomerSelection)components[index];
+                for(int itemIndex = 0; itemIndex<selection.itemCount.size(); itemIndex++) {
+                    number = selection.itemCount.get(itemIndex);
+                    if( number > 0 ) {
+                        price = selection.priceList.get(itemIndex);
+                        subTotal = number * price;
+
+                        transation2Printer = selection.title+"("+String.valueOf(price)+")"+",數量:"+String.valueOf(number)+",小計:"+String.valueOf(subTotal);
+                        content.add(transation2Printer);
+                        totalPrice += subTotal;
+                    }
+                }
+            }
+        }
+        content.add("總價:"+ String.valueOf(totalPrice));
+
+        content.add(this.spicyLevel.get());
+
+        OutputPrinter printer = new OutputPrinter("柯黑鴨", content ,date);
+        printer.RawWriteToESC();
+    }
+
+    private void StringToESC(String string, String fontName , int fontSize) {
+        //final int printWidthDots = 80 / 25.4 * 203 = 639;
+        // font size 128 ,MaxDescent 26
+        Font font = new Font(fontName, Font.PLAIN, fontSize);
+        BufferedImage offScreenCanvas = new BufferedImage(string.length() * fontSize , fontSize + fontSize * 26 / 128 + 1, BufferedImage.TYPE_BYTE_BINARY);
+        Graphics2D g2d = offScreenCanvas.createGraphics();
+        g2d.translate(0, 0); 
+
+        g2d.setFont(font);
+
+        g2d.drawString(string, 0 , fontSize);
+        g2d.dispose();
+
+        WritableRaster raster = offScreenCanvas .getRaster();
+        DataBufferByte data = (DataBufferByte) raster.getDataBuffer();
+
+        Date date = new Date();
+        SimpleDateFormat formatter = new SimpleDateFormat("dd-mm-ss");  
+        String fileName = formatter.format(date);
+
+        try {
+            Path path = Paths.get("D:/Source/Java/Text2Lineart/"+ fileName+".data");
+            Files.write(path, data.getData());
+
+            File outputfile = new File("D:/Source/Java/Text2Lineart/"+ fileName+".jpg");
+            ImageIO.write(offScreenCanvas, "jpg", outputfile);
+        }catch(Exception e){
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+
+        offScreenCanvas.flush();
+
+        System.gc();
+    }
+
+    private void SaveToFile(Date date) {
+        String desktopFolder = System.getProperty("user.home") + "/Desktop";
+        SimpleDateFormat formatter = new SimpleDateFormat("yyyy");  
+        String yearFolder = desktopFolder+"/"+formatter.format(date);
+        File tmpFile = new File(yearFolder);
+        if(false == tmpFile.exists()) { 
+            boolean bool = tmpFile.mkdirs();
+            // do something
+            if(false == bool){
+                JOptionPane.showMessageDialog(null, "磁碟問題");
+                date = null;
+                formatter = null;
+                tmpFile = null;
+                System.gc();
+                return;
+            }
+        }
+
+        formatter = new SimpleDateFormat("MM");  
+        String mothFolder = yearFolder+"/"+formatter.format(date);
+        tmpFile = new File(mothFolder);
+        if(false == tmpFile.exists()) { 
+            boolean bool = tmpFile.mkdirs();
+            // do something
+            if(false == bool){
+                JOptionPane.showMessageDialog(null, "磁碟問題");
+                date = null;
+                formatter = null;
+                tmpFile = null;
+                System.gc();
+                return;
+            }
+        }
+
+        formatter = new SimpleDateFormat("dd");  
+        String csvFilePath = mothFolder+"/"+formatter.format(date) + ".csv";  
+        
+        try {
+            OutputStreamWriter csvFile;
+            BufferedWriter csvWriter;
+
+            tmpFile = new File(csvFilePath);
+            if(false == tmpFile.exists()) {
+                csvFile = new OutputStreamWriter(new FileOutputStream(csvFilePath),"UTF-8");
+                csvWriter = new BufferedWriter(csvFile);
+                csvWriter.write("品項(單價)"+","+"數量"+","+"小計"+"\n");
+            }
+            else {
+                csvFile = new OutputStreamWriter(new FileOutputStream(csvFilePath, true),"UTF-8");
+                csvWriter = new BufferedWriter(csvFile);
+            }
+            
+            formatter = new SimpleDateFormat("HH點mm分ss秒");
+            csvWriter.write("\n"+formatter.format(date)+"\n");
+
+            int number,price ,subTotal ;
+            String transation2csv = "";
+
+            for(JPanel panel: itemPanels) {
+                Component[] components = panel.getComponents();
+                int componentNumber = components.length;
+                for(int index = 0; index < componentNumber; index++) {
+                    CustomerSelection selection = (CustomerSelection)components[index];
+                    for(int itemIndex = 0; itemIndex<selection.itemCount.size(); itemIndex++) {
+                        number = selection.itemCount.get(itemIndex);
+                        if( number > 0 ) {
+                            price = selection.priceList.get(itemIndex);
+                            subTotal = number * price;
+
+                            transation2csv = selection.title+"("+String.valueOf(price)+")"+","+String.valueOf(number)+","+String.valueOf(subTotal);
+                            csvWriter.write(transation2csv+"\n");
+                            //totalPrice += subTotal;
+                        }
+                    }
+                }
+            }
+            csvWriter.write(spicyLevel.get() +"\n");
+
+            csvWriter.close();
+            csvFile.close();
+        } catch(Exception e1){
+            // TODO Auto-generated catch block
+            e1.printStackTrace();
+        }
+
+        tmpFile = null;
+        formatter = null;
+        System.gc();
     }
 
     private void SelectionChanged() {

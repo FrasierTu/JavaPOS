@@ -154,28 +154,26 @@ public class CustomerSelection extends JPanel implements ComponentListener {
         this.add(minus);
         minus.addMouseListener(new MouseAdapter() {
             public void mouseClicked(MouseEvent e) {
-                new Thread(() -> {
-                    int oldCount = itemCount.get(currentIndex);
+                int oldCount = itemCount.get(currentIndex);
 
-                    if (oldCount < 1) {
-                        return;
-                    }
+                if (oldCount < 1) {
+                    return;
+                }
 
 
-                    int count = oldCount-1;
-                    itemCount.set(currentIndex, count);
-                    itemCountLabel.setText(String.valueOf(itemCount.get(currentIndex)));
-                    changes.firePropertyChange("SelectionChanged", oldCount,count);
+                int count = oldCount-1;
+                itemCount.set(currentIndex, count);
+                itemCountLabel.setText(String.valueOf(itemCount.get(currentIndex)));
+                changes.firePropertyChange("SelectionChanged", oldCount,count);
 
-                    count = 0;
-                    for(Integer number : itemCount) {
-                        count += number;
-                    }
+                count = 0;
+                for(Integer number : itemCount) {
+                    count += number;
+                }
 
-                    if(count < 1) {
-                        titleLabel.setForeground(Color.black);
-                    }
-                }).start();
+                if(count < 1) {
+                    titleLabel.setForeground(Color.black);
+                }
             }
         });
 
