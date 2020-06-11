@@ -495,14 +495,14 @@ final public class JavaPOS implements PropertyChangeListener {
                         price = selection.priceList.get(itemIndex);
                         subTotal = number * price;
 
-                        transation2Printer = selection.title+"("+String.valueOf(price)+")"+",數量:"+String.valueOf(number)+",小計:"+String.valueOf(subTotal);
+                        transation2Printer = selection.title+"("+String.valueOf(price)+")"+",數量:"+String.valueOf(number)+",小計:"+String.valueOf(subTotal)+"元";
                         content.add(transation2Printer);
                         totalPrice += subTotal;
                     }
                 }
             }
         }
-        content.add("總價:"+ String.valueOf(totalPrice));
+        content.add("總價:"+ String.valueOf(totalPrice)+"元");
 
         content.add(this.spicyLevel.get());
 

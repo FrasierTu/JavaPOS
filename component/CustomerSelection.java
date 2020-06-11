@@ -96,7 +96,7 @@ public class CustomerSelection extends JPanel implements ComponentListener {
         labelHeight = charHeight;
         final JLabel lChoice = new JLabel("\u25C0");// +"\t" + levels[0]+ "\t" + "\u25B6");
         lChoice.setFont(labelFont);
-        lChoice.setBounds(labelX, labelY, labelWidth, labelHeight);
+        lChoice.setBounds(labelX, labelY, labelWidth, labelHeight+5);
         lChoice.setHorizontalAlignment(JLabel.CENTER);
         lChoice.setBorder(blackline);
         this.add(lChoice);
@@ -117,7 +117,7 @@ public class CustomerSelection extends JPanel implements ComponentListener {
         labelHeight = charHeight;
         final JLabel rChoice = new JLabel("\u25B6");// +"\t" + levels[0]+ "\t" + "\u25B6");
         rChoice.setFont(labelFont);
-        rChoice.setBounds(labelX, labelY, labelWidth, labelHeight);
+        rChoice.setBounds(labelX, labelY, labelWidth, labelHeight+5);
         rChoice.setHorizontalAlignment(JLabel.CENTER);
         rChoice.setBorder(blackline);
         this.add(rChoice);
@@ -148,7 +148,7 @@ public class CustomerSelection extends JPanel implements ComponentListener {
         labelHeight = charHeight;
         final JLabel minus = new JLabel("\u2212");// +"\t" + levels[0]+ "\t" + "\u25B6");
         minus.setFont(labelFont);
-        minus.setBounds(labelX, labelY, labelWidth, labelHeight);
+        minus.setBounds(labelX, labelY, labelWidth, labelHeight+5);
         minus.setHorizontalAlignment(JLabel.CENTER);
         minus.setBorder(blackline);
         this.add(minus);
@@ -159,7 +159,6 @@ public class CustomerSelection extends JPanel implements ComponentListener {
                 if (oldCount < 1) {
                     return;
                 }
-
 
                 int count = oldCount-1;
                 itemCount.set(currentIndex, count);
@@ -183,7 +182,7 @@ public class CustomerSelection extends JPanel implements ComponentListener {
         labelHeight = charHeight;
         final JLabel plus = new JLabel("\uFF0B");// +"\t" + levels[0]+ "\t" + "\u25B6");
         plus.setFont(labelFont);
-        plus.setBounds(labelX, labelY, labelWidth, labelHeight);
+        plus.setBounds(labelX, labelY, labelWidth, labelHeight+5);
         plus.setHorizontalAlignment(JLabel.CENTER);
         plus.setBorder(blackline);
         this.add(plus);

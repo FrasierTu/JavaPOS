@@ -57,7 +57,8 @@ public class OutputPrinter implements Printable {
             escCommands.write('\n');
 
             escCommands.write(this.title.getBytes("Big5"));
-            escCommands.write("---------------".getBytes("Big5"));
+            escCommands.write("\n".getBytes("Big5"));
+            escCommands.write("------------------------".getBytes("Big5"));
 
             escCommands.write(0x1d);
             escCommands.write('!');//Double off
@@ -66,9 +67,10 @@ public class OutputPrinter implements Printable {
 
             for(String item : this.content) {
                 escCommands.write(item.getBytes("Big5"));
+                escCommands.write("\n".getBytes("Big5"));
             }
 
-            escCommands.write("---------------".getBytes("Big5"));
+            escCommands.write("**************************\n".getBytes("Big5"));
             SimpleDateFormat formatter = new SimpleDateFormat("yyyy年MM月dd日HH點mm分ss秒"); 
             String dateTimeString = formatter.format(date);
             escCommands.write(dateTimeString.getBytes("Big5"));
