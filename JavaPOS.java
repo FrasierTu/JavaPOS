@@ -530,6 +530,7 @@ final public class JavaPOS implements PropertyChangeListener {
             int componentNumber = components.length;
             for(int index = 0; index < componentNumber; index++) {
                 CustomerSelection selection = (CustomerSelection)components[index];
+<<<<<<< HEAD
                 number = selection.amount;
                 if( number > 0 ) {
                     price = selection.price;
@@ -538,10 +539,22 @@ final public class JavaPOS implements PropertyChangeListener {
                     transation2Printer = selection.title+"("+String.valueOf(price)+")"+",數量:"+String.valueOf(number)+",小計:"+String.valueOf(subTotal);
                     content.add(transation2Printer);
                     totalPrice += subTotal;
+=======
+                for(int itemIndex = 0; itemIndex<selection.itemCount.size(); itemIndex++) {
+                    number = selection.itemCount.get(itemIndex);
+                    if( number > 0 ) {
+                        price = selection.priceList.get(itemIndex);
+                        subTotal = number * price;
+
+                        transation2Printer = selection.title+"("+String.valueOf(price)+")"+",數量:"+String.valueOf(number)+",小計:"+String.valueOf(subTotal)+"元";
+                        content.add(transation2Printer);
+                        totalPrice += subTotal;
+                    }
+>>>>>>> 95b1bfdc48ef2e7c4dc210babbf31fe3c1212535
                 }
         }
         }
-        content.add("總價:"+ String.valueOf(totalPrice));
+        content.add("總價:"+ String.valueOf(totalPrice)+"元");
 
         //content.add(this.spicyLevel.get());
         content.add(this.toGoOrNot.get());
