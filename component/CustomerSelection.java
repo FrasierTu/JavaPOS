@@ -17,8 +17,8 @@ import java.awt.event.MouseEvent;
 import java.beans.PropertyChangeSupport;
 import java.beans.PropertyChangeListener;
 
-import java.util.List;
-import java.util.ArrayList;
+//import java.util.List;
+//import java.util.ArrayList;
 
 public class CustomerSelection extends JPanel implements ComponentListener {
     private static final long serialVersionUID = 0x97645L;
@@ -86,53 +86,9 @@ public class CustomerSelection extends JPanel implements ComponentListener {
         this.titleLabel.setHorizontalAlignment(JLabel.CENTER);
         this.add(this.titleLabel);
 
-        labelX = 5;
+        labelX = 0;
         labelY = titleLabel.getHeight() + 5;
-        labelWidth = charWidth * 3/2;
-        labelHeight = charHeight;
-        final JLabel lChoice = new JLabel("\u25C0");// +"\t" + levels[0]+ "\t" + "\u25B6");
-        lChoice.setFont(labelFont);
-        lChoice.setBounds(labelX, labelY, labelWidth, labelHeight+5);
-        lChoice.setHorizontalAlignment(JLabel.CENTER);
-        lChoice.setBorder(blackline);
-        /*
-        this.add(lChoice);
-        lChoice.addMouseListener(new MouseAdapter() {
-            public void mouseClicked(MouseEvent e) {
-                currentIndex--;
-                if (currentIndex < 0) {
-                    currentIndex = priceList.size() - 1;
-                }
-                itemPriceLabel.setText(String.valueOf(priceList.get(currentIndex)));
-                itemCountLabel.setText(String.valueOf(itemCount.get(currentIndex)));
-            }
-        });
-*/
-        labelX = width - 5 - charWidth * 3/2;
-        labelY = titleLabel.getHeight() + 5;
-        labelWidth = charWidth * 3/2;
-        labelHeight = charHeight;
-        final JLabel rChoice = new JLabel("\u25B6");// +"\t" + levels[0]+ "\t" + "\u25B6");
-        rChoice.setFont(labelFont);
-        rChoice.setBounds(labelX, labelY, labelWidth, labelHeight+5);
-        rChoice.setHorizontalAlignment(JLabel.CENTER);
-        rChoice.setBorder(blackline);
-        /*
-        this.add(rChoice);
-        rChoice.addMouseListener(new MouseAdapter() {
-            public void mouseClicked(MouseEvent e) {
-                currentIndex++;
-                if (currentIndex >= priceList.size()) {
-                    currentIndex = 0;
-                }
-                itemPriceLabel.setText(String.valueOf(priceList.get(currentIndex)));
-                itemCountLabel.setText(String.valueOf(itemCount.get(currentIndex)));
-            }
-        });
-*/
-        labelX = lChoice.getLocation().x + lChoice.getWidth();
-        labelY = titleLabel.getHeight() + 5;
-        labelWidth = width - (lChoice.getWidth() + rChoice.getWidth() + 10);
+        labelWidth = width;
         labelHeight = charHeight;
         priceLabel.setFont(labelFont);
         priceLabel.setBounds(labelX, labelY, labelWidth, labelHeight);
@@ -141,7 +97,7 @@ public class CustomerSelection extends JPanel implements ComponentListener {
         this.add(priceLabel);
 
         labelX = 5;
-        labelY = lChoice.getLocation().y + lChoice.getHeight() + 15;
+        labelY = priceLabel.getLocation().y + priceLabel.getHeight() + 10;
         labelWidth = charWidth * 2;
         labelHeight = charHeight;
         final JLabel minus = new JLabel("\u2212");// +"\t" + levels[0]+ "\t" + "\u25B6");
@@ -174,9 +130,8 @@ public class CustomerSelection extends JPanel implements ComponentListener {
 
         labelWidth = charWidth * 2;
         labelX = width - 5 - labelWidth;
-        labelY = lChoice.getLocation().y + lChoice.getHeight() + 15;
+        labelY = priceLabel.getLocation().y + priceLabel.getHeight() + 10;
         labelHeight = charHeight;
-        
         final JLabel plus = new JLabel("\uFF0B");// +"\t" + levels[0]+ "\t" + "\u25B6");
         plus.setFont(labelFont);
         plus.setBounds(labelX, labelY, labelWidth, labelHeight+5);
@@ -198,7 +153,7 @@ public class CustomerSelection extends JPanel implements ComponentListener {
         });
 
         labelX = minus.getLocation().x + minus.getWidth();
-        labelY = lChoice.getLocation().y + lChoice.getHeight() + 15;
+        labelY = priceLabel.getLocation().y + priceLabel.getHeight() + 10;
         labelWidth = width - (minus.getWidth() + plus.getWidth() + 10);
         labelHeight = charHeight;
         amountLabel.setFont(labelFont);
