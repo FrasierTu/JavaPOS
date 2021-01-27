@@ -23,7 +23,8 @@ public class BigTab extends JPanel implements MouseListener , ComponentListener 
     private int selectedIndex = 0;
     private int itemCount = 0;
     private FontMetrics metrics;
-    
+    final Color[] colors = {new Color(93,0,0) ,new Color(0,0,93) ,new Color(0,93,0), new Color(102,102,102) ,Color.orange ,Color.yellow ,Color.green , Color.pink};
+
     int panelWidth = 0;//getWidth();
     int panelHeight = 0;//getHeight();
     int tabWidth = 0;
@@ -64,10 +65,11 @@ public class BigTab extends JPanel implements MouseListener , ComponentListener 
         changes.removePropertyChangeListener(l);
     }
     
+    /*
     public int getSelectedIndex() {
         return selectedIndex;
     }
-
+*/
     public void componentResized(final ComponentEvent e) {
         // Perform calculation here
         // System.out.println("componentResized");
@@ -154,7 +156,6 @@ public class BigTab extends JPanel implements MouseListener , ComponentListener 
         
         int rectX = 0;
         
-        Color[] colors = {Color.red ,Color.orange ,Color.yellow ,Color.green ,Color.blue ,Color.cyan ,Color.pink};
         
         for(int i = 0; i < this.itemCount; i++) {
             stringWidth = metrics.stringWidth(Integer.toString(i+1));
@@ -169,11 +170,14 @@ public class BigTab extends JPanel implements MouseListener , ComponentListener 
                 g.fillRect(rectX + 1, 1 , tabWidth-1, panelHeight-2);
             }
             
-            g.setColor(Color.black);
+            g.setColor(Color.cyan);
             stringX += rectX;
             g.drawString(Integer.toString(i+1), stringX ,stringY);
         }
-        
+    }
+
+    public Color getCurrentColor() {
+        return colors[selectedIndex];
     }
 }
 

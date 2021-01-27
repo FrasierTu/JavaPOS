@@ -22,34 +22,29 @@ import java.util.ArrayList;
 
 public class CustomerSelection extends JPanel implements ComponentListener {
     private static final long serialVersionUID = 0x97645L;
-    JLabel itemPriceLabel;
-    JLabel itemCountLabel;
+    JLabel priceLabel;
+    JLabel amountLabel;
     JLabel titleLabel;
 
     public String title = "";
-    public List<Integer> priceList;
-    public List<Integer> itemCount;
+    public Integer price;
+    public Integer amount;
+    public String catalogue;
     //public int ID = 0;
-    private int currentIndex = 0;
     private PropertyChangeSupport changes = new PropertyChangeSupport(this);
 
     public CustomerSelection() {
         this.addComponentListener(this);
     }
 
-    public CustomerSelection(final String title, final List<Integer> priceList) {
+    public CustomerSelection(final String title, final Integer price, final String catalogue) {
         this.title = title;
-        this.priceList = new ArrayList<>();
-        this.priceList.addAll(priceList);
-
-        this.itemCount = new ArrayList<>();
-
-        for(int index = 0 ; index < this.priceList.size(); index++) {  
-            this.itemCount.add(0);
-        }
+        this.price = price;
+        this.amount = 0;
+        this.catalogue = catalogue;
 
         this.setLayout(null);
-        this.setBackground(new  Color(240, 240, 240));
+        this.setBackground(new  Color(220, 220, 220));
         final Border blackline = BorderFactory.createLineBorder(Color.black);
         this.setBorder(blackline);
 
@@ -68,10 +63,11 @@ public class CustomerSelection extends JPanel implements ComponentListener {
         final int width = getWidth();
         final int height = getHeight();
         final Border blackline = BorderFactory.createLineBorder(Color.black);
-        final Font labelFont = new Font("Serif", Font.PLAIN, 27);
+        final Font labelFont = new Font("Serif", Font.BOLD, 29);
         final JLabel dummyLabel = new JLabel("我");
-        itemPriceLabel = new JLabel(String.valueOf(this.priceList.get(0)));// +"\t" + levels[0]+ "\t" + "\u25B6");
-        itemCountLabel = new JLabel(String.valueOf(this.itemCount.get(0)));// +"\t" + levels[0]+ "\t" + "\u25B6");
+        
+        priceLabel = new JLabel(String.valueOf(this.price));// +"\t" + levels[0]+ "\t" + "\u25B6");
+        amountLabel = new JLabel(String.valueOf(this.amount));// +"\t" + levels[0]+ "\t" + "\u25B6");
 
         dummyLabel.setFont(labelFont);
         
@@ -99,6 +95,7 @@ public class CustomerSelection extends JPanel implements ComponentListener {
         lChoice.setBounds(labelX, labelY, labelWidth, labelHeight);
         lChoice.setHorizontalAlignment(JLabel.CENTER);
         lChoice.setBorder(blackline);
+        /*
         this.add(lChoice);
         lChoice.addMouseListener(new MouseAdapter() {
             public void mouseClicked(MouseEvent e) {
@@ -110,7 +107,7 @@ public class CustomerSelection extends JPanel implements ComponentListener {
                 itemCountLabel.setText(String.valueOf(itemCount.get(currentIndex)));
             }
         });
-
+*/
         labelX = width - 5 - charWidth * 3/2;
         labelY = titleLabel.getHeight() + 5;
         labelWidth = charWidth * 3/2;
@@ -120,6 +117,7 @@ public class CustomerSelection extends JPanel implements ComponentListener {
         rChoice.setBounds(labelX, labelY, labelWidth, labelHeight);
         rChoice.setHorizontalAlignment(JLabel.CENTER);
         rChoice.setBorder(blackline);
+        /*
         this.add(rChoice);
         rChoice.addMouseListener(new MouseAdapter() {
             public void mouseClicked(MouseEvent e) {
@@ -131,20 +129,20 @@ public class CustomerSelection extends JPanel implements ComponentListener {
                 itemCountLabel.setText(String.valueOf(itemCount.get(currentIndex)));
             }
         });
-
+*/
         labelX = lChoice.getLocation().x + lChoice.getWidth();
         labelY = titleLabel.getHeight() + 5;
         labelWidth = width - (lChoice.getWidth() + rChoice.getWidth() + 10);
         labelHeight = charHeight;
-        itemPriceLabel.setFont(labelFont);
-        itemPriceLabel.setBounds(labelX, labelY, labelWidth, labelHeight);
-        itemPriceLabel.setHorizontalAlignment(JLabel.CENTER);
+        priceLabel.setFont(labelFont);
+        priceLabel.setBounds(labelX, labelY, labelWidth, labelHeight);
+        priceLabel.setHorizontalAlignment(JLabel.CENTER);
         //itemPriceLabel.setBorder(blackline);
-        this.add(itemPriceLabel);
+        this.add(priceLabel);
 
         labelX = 5;
         labelY = lChoice.getLocation().y + lChoice.getHeight() + 15;
-        labelWidth = charWidth * 3/2;
+        labelWidth = charWidth * 2;
         labelHeight = charHeight;
         final JLabel minus = new JLabel("\u2212");// +"\t" + levels[0]+ "\t" + "\u25B6");
         minus.setFont(labelFont);
@@ -154,33 +152,31 @@ public class CustomerSelection extends JPanel implements ComponentListener {
         this.add(minus);
         minus.addMouseListener(new MouseAdapter() {
             public void mouseClicked(MouseEvent e) {
-                int oldCount = itemCount.get(currentIndex);
+                int oldCount = amount;
 
                 if (oldCount < 1) {
                     return;
                 }
 
-
                 int count = oldCount-1;
-                itemCount.set(currentIndex, count);
-                itemCountLabel.setText(String.valueOf(itemCount.get(currentIndex)));
-                changes.firePropertyChange("SelectionChanged", oldCount,count);
-
-                count = 0;
-                for(Integer number : itemCount) {
-                    count += number;
-                }
+                amount = count;
+                new Thread(() -> {
+                    changes.firePropertyChange("SelectionChanged", oldCount,count);
+                    }
+                ).start();  
 
                 if(count < 1) {
                     titleLabel.setForeground(Color.black);
                 }
+                amountLabel.setText(String.valueOf(amount));
             }
         });
 
-        labelX = width - 5 - charWidth * 3/2;
+        labelWidth = charWidth * 2;
+        labelX = width - 5 - labelWidth;
         labelY = lChoice.getLocation().y + lChoice.getHeight() + 15;
-        labelWidth = charWidth * 3/2;
         labelHeight = charHeight;
+        
         final JLabel plus = new JLabel("\uFF0B");// +"\t" + levels[0]+ "\t" + "\u25B6");
         plus.setFont(labelFont);
         plus.setBounds(labelX, labelY, labelWidth, labelHeight);
@@ -189,16 +185,15 @@ public class CustomerSelection extends JPanel implements ComponentListener {
         this.add(plus);
         plus.addMouseListener(new MouseAdapter() {
             public void mouseClicked(MouseEvent e) {
-                int oldCount = itemCount.get(currentIndex);
-                int count = oldCount +1;
-            
+                int oldCount = amount;
+                int count = oldCount + 1;
+                amount = count;
                 titleLabel.setForeground(Color.magenta);
-                itemCount.set(currentIndex, count);
-                itemCountLabel.setText(String.valueOf(itemCount.get(currentIndex)));
                 new Thread(() -> {
                     changes.firePropertyChange("SelectionChanged", oldCount,count);
                     }
-                ).start();   
+                ).start(); 
+                amountLabel.setText(String.valueOf(amount));
             }
         });
 
@@ -206,11 +201,11 @@ public class CustomerSelection extends JPanel implements ComponentListener {
         labelY = lChoice.getLocation().y + lChoice.getHeight() + 15;
         labelWidth = width - (minus.getWidth() + plus.getWidth() + 10);
         labelHeight = charHeight;
-        itemCountLabel.setFont(labelFont);
-        itemCountLabel.setBounds(labelX, labelY, labelWidth, labelHeight);
-        itemCountLabel.setHorizontalAlignment(JLabel.CENTER);
+        amountLabel.setFont(labelFont);
+        amountLabel.setBounds(labelX, labelY, labelWidth, labelHeight);
+        amountLabel.setHorizontalAlignment(JLabel.CENTER);
         //itemCountLabel.setBorder(blackline);
-        this.add(itemCountLabel);
+        this.add(amountLabel);
     }
 
     public void componentHidden(final ComponentEvent ce) {
@@ -226,31 +221,20 @@ public class CustomerSelection extends JPanel implements ComponentListener {
 
     public void clearAll() {
         new Thread(() -> {
-            this.currentIndex = 0;
-            for(int index = 0; index < this.itemCount.size(); index++) {
-                itemCount.set(index, 0);
-            }
-            this.itemPriceLabel.setText(String.valueOf(priceList.get(currentIndex)));
-            this.itemCountLabel.setText(String.valueOf(itemCount.get(currentIndex)));
+            this.amount = 0;
+            this.priceLabel.setText(String.valueOf(price));
+            this.amountLabel.setText(String.valueOf(amount));
             this.titleLabel.setForeground(Color.black);
         }).start();
     }
 
-    public void clearItem(int index) {
+    public void clearItem() {
         new Thread(() -> {
-            currentIndex = index;
-            this.itemCount.set(currentIndex, 0);
-            this.itemPriceLabel.setText(String.valueOf(priceList.get(currentIndex)));
-            this.itemCountLabel.setText("0");
+            this.amount = 0;
+            this.priceLabel.setText(String.valueOf(price));
+            this.amountLabel.setText("0");
     
-            int count = 0;
-            for(Integer number:this.itemCount) {
-                count += number;
-            }
-    
-            if(count < 1) {
-                this.titleLabel.setForeground(Color.black);
-            }
+            this.titleLabel.setForeground(Color.black);
         }).start();
     }
 }

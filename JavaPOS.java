@@ -50,12 +50,12 @@ import java.awt.image.DataBufferByte;
 import java.awt.image.BufferedImage;
 import javax.imageio.ImageIO;
 
-import java.io.ByteArrayOutputStream;
+//import java.io.ByteArrayOutputStream;
 
 final class Item {
     public String title;
-    public List<Integer> prices;
-    public List<Integer> itemCount;
+    public Integer price;
+    public String catalogue;
 };
 
 final public class JavaPOS implements PropertyChangeListener { 
@@ -63,17 +63,20 @@ final public class JavaPOS implements PropertyChangeListener {
 
     List<JPanel> itemPanels = new ArrayList<JPanel>();
     List<CustomerSelection> customerSelections = new ArrayList<CustomerSelection>();
+    
     JTable table;
     JLabel confirmButton;
-    SpicyLevel spicyLevel;
+    //SpicyLevel spicyLevel;
+    SisBroTradeName sisBroTradeName;
+    ToGoOrNot toGoOrNot;
     public static void main(final String[] args) {
         String desktopFolder = System.getProperty("user.home") + "/Desktop";
 
-        String csvFilePath = desktopFolder+"/1.csv";
+        String csvFilePath = desktopFolder+"/sister.csv";
         File tmpDir = new File(csvFilePath);
         if(false == tmpDir.exists()) { 
             // do something
-            JOptionPane.showMessageDialog(null, "1.csv 不存在桌面上");
+            JOptionPane.showMessageDialog(null, "sister.csv 不存在桌面上");
             return;
         }
     
@@ -100,47 +103,223 @@ final public class JavaPOS implements PropertyChangeListener {
     }
 
     public JavaPOS() {
-        final JFrame demo = new JFrame("花開富貴");
-        demo.setSize(1280, 900);
-        demo.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        demo.setLayout(null);
+        final JFrame mainFrame = new JFrame("花開富貴");
+        mainFrame.setSize(1280, 900);
+        mainFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        mainFrame.setLayout(null);
 
+        List<Item> sisItems = this.OpenCSV("sister");
+        List<Item> broItems = this.OpenCSV("brother");
+        List<JPanel> sisPanels = this.ItemsToPanel(sisItems);
+        List<JPanel> broPanels = this.ItemsToPanel(broItems);
+
+        this.itemPanels.addAll(sisPanels);
+        this.itemPanels.addAll(broPanels);
+        //final int itemWidth = 160;
+        for(JPanel panel : this.itemPanels) {
+            mainFrame.add(panel);
+        }
+        this.itemPanels.get(0).setBackground(new  Color(53,0,0));
+       
+        this.itemPanels.get(0).setVisible(true);
+        //demo.add(panel);
+
+        final BigTab tab  = new BigTab(sisPanels.size()+broPanels.size());
+        tab.setBounds(5, 5, 995, 45);
+        tab.addPropertyChangeListener(this);
+        mainFrame.add(tab);
+        
+        //
+        this.table= this.CreateTable();
+        JScrollPane scrollPane = new JScrollPane( this.table );
+        scrollPane.setBounds(1005,5,255,720);
+        //scrollPane.setBounds(1005,5,255,660);
+        mainFrame.add(scrollPane);
+
+        mainFrame.setResizable(false);
+        mainFrame.setLocationRelativeTo(null);
+        mainFrame.setVisible(true);
+
+        int firsColumntWidth = table.getWidth() * 20 / 100;
+        int secondColumnWidth = table.getWidth() - firsColumntWidth * 2;
+
+        TableColumnModel columnModel = table.getColumnModel();
+
+        columnModel.getColumn(0).setPreferredWidth(firsColumntWidth);
+        columnModel.getColumn(1).setPreferredWidth(secondColumnWidth);
+        columnModel.getColumn(2).setPreferredWidth(firsColumntWidth);
+
+        table.getTableHeader().setResizingAllowed(false);
+        table.getTableHeader().setReorderingAllowed(false);
+        table.setRowHeight(table.getRowHeight() *2);
+
+        table.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                JTable table = (JTable) e.getSource();
+                int tableColumn = table.columnAtPoint(e.getPoint());
+                int tableRow = table.rowAtPoint(e.getPoint());
+
+                if (tableColumn != 0) {
+                    return;
+                }
+
+                int count = 0;
+                for(JPanel panel: itemPanels) {
+                    Component[] components = panel.getComponents();
+                    int componentNumber = components.length;
+                    for(int index = 0; index < componentNumber; index++) {
+                        CustomerSelection selection = (CustomerSelection)components[index];
+    
+                        if (selection.amount != 0) {
+                            if(count == tableRow) {
+                                selection.clearItem();
+                                new Thread(() -> {
+                                    SelectionChanged();
+                                }).start();
+                                return;
+                            }
+                            count++;
+                        }
+                    }
+                }
+            }
+        });
+
+        Rectangle tableBounds = scrollPane.getBounds();
+        this.toGoOrNot = new ToGoOrNot();
+        toGoOrNot.setBounds(tableBounds.x,tableBounds.y + tableBounds.height + 5,tableBounds.width, 45);
+        mainFrame.add(toGoOrNot);
+
+        JLabel cencelButton = new JLabel("\u274C"); 
+        //Rectangle spicyLevelBounds = spicyLevel.getBounds();
+        Rectangle toGoOrNotBounds = toGoOrNot.getBounds();
+        cencelButton.setBounds(toGoOrNotBounds.x ,toGoOrNotBounds.y + toGoOrNotBounds.height + 15,65, 65);
+        final Border blackline = BorderFactory.createLineBorder(Color.black);
+        cencelButton.setBorder(blackline);
+        cencelButton.setHorizontalAlignment(JLabel.CENTER);
+        cencelButton.setFont(new Font("Serif", Font.PLAIN, 37));
+        cencelButton.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                new Thread(() -> {
+                    ClearTransation();
+                }).start();
+            }
+        });
+        mainFrame.add(cencelButton);
+
+        this.confirmButton = new JLabel("0(0)"); 
+        this.confirmButton.setBounds(toGoOrNotBounds.x + 70 ,toGoOrNotBounds.y + toGoOrNotBounds.height + 15,toGoOrNotBounds.width - 70, 65);
+        this.confirmButton.setBorder(blackline);
+        this.confirmButton.setHorizontalAlignment(JLabel.CENTER);
+        this.confirmButton.setFont(new Font("Serif", Font.PLAIN, 39));
+        this.confirmButton.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                Boolean toPrint = false;
+
+                for(JPanel panel: itemPanels) {
+                    Component[] components = panel.getComponents();
+                    int componentNumber = components.length;
+                    for(int index = 0; index < componentNumber; index++) {
+                        CustomerSelection selection = (CustomerSelection)components[index];
+    
+                        int number = selection.amount;
+                            if( number > 0 ) {
+                                toPrint = true;
+                                break;
+                            }
+                        if(toPrint) {
+                            break;
+                        }
+                    }
+                    if(toPrint) {
+                        break;
+                    }
+                }
+
+                if(false == toPrint) {
+                    return;
+                }
+
+                final Date date = new Date();
+                
+                SaveToFile(date);
+                DoPrinting(date);
+
+                ClearTransation();
+            }
+        });
+        
+        mainFrame.add(confirmButton);
+        /*
+        
+
+
+        
+        this.sisBroTradeName = new SisBroTradeName();
+        sisBroTradeName.setBounds(tableBounds.x,tableBounds.y + tableBounds.height + 5,tableBounds.width, 45);
+        demo.add(sisBroTradeName);
+
+
+        demo.setResizable(false);
+        demo.setLocationRelativeTo(null);
+        demo.setVisible(true);
+
+        
+        itemPanels.get(0).setVisible(true);
+
+        
+        */
+    }
+
+    private void ClearTransation() {
+        new Thread(() -> {
+            for(JPanel panel: itemPanels) {
+                Component[] components = panel.getComponents();
+                int componentNumber = components.length;
+                for(int index = 0; index < componentNumber; index++) {
+                    CustomerSelection selection = (CustomerSelection)components[index];
+                    selection.clearAll();
+                }
+            }
+    
+            DefaultTableModel tableModel = (DefaultTableModel) this.table.getModel();
+            tableModel.setRowCount(0);
+            tableModel.fireTableDataChanged();
+            this.confirmButton.setText("0(0)");
+            this.toGoOrNot.set(0);
+        }).start();
+    }
+
+    private List<Item> OpenCSV(String csvName) {
         List<Item> items = new ArrayList<Item>();
 
         try {
             String desktopFolder = System.getProperty("user.home") + "/Desktop";
-            String csvFilePath = desktopFolder+"/1.csv";
+            String csvFilePath = desktopFolder+"/"+csvName+".csv";
             InputStreamReader csvFile = new InputStreamReader(new FileInputStream(csvFilePath),"UTF-8");
             BufferedReader reader = new BufferedReader(csvFile);
 
-            String itemTitles = reader.readLine();
-            String titles[] = itemTitles.split(",");
-            int count = titles.length;
+            String catalogueString = reader.readLine().split(",")[0];
+
             Item item;
-            for (int index = 0 ; index < count; index++) {
-                item = new Item();
-                item.title = titles[index];
-                item.prices = new ArrayList<Integer>();
-                items.add(item);
-
-                //System.out.println(itemInfo.title);
-            }
-
             String line = null;
+            int lineItemCount = 0;
             while((line=reader.readLine())!=null){
-                String prices[] = line.split(",");
-                count = prices.length;
+                String namePrice[] = line.split(",");
+                lineItemCount = namePrice.length;
 
-                for (int index = 0; index < count; index++) {
-                    int value = 0;
-                    try {
-                        value = Integer.parseInt(prices[index]);
-                        items.get(index).prices.add(value);
-                    } catch (NumberFormatException e) {
-                    }    
+                if (lineItemCount != 2) {
+                    continue;
                 }
-            }
-            
+                item = new Item();
+                item.title = namePrice[0];
+                item.price = Integer.parseInt(namePrice[1]);
+                item.catalogue = catalogueString;
+                items.add(item);
+            }            
             reader.close();
             csvFile.close();
 
@@ -149,98 +328,60 @@ final public class JavaPOS implements PropertyChangeListener {
             e.printStackTrace();
         }
 
-        for (Item item : items) {
-            System.out.println(item.title);
-            if(item.prices.size() < 1) {
-                JOptionPane.showMessageDialog(null, item.title+" 怪怪的喔！");
-                System.exit(1);
-            }
-        }
-        
-        int tabCount = 0;
-        final int itemWidth = 160;
+        return items;
+    }
+
+    final private List<JPanel> ItemsToPanel(List<Item> items) {
+        final int xGap = 8;
+        final int yGap = 8;
+
+        final int itemWidth = 320;
         final int itemHeight = 151;
         final int panelWidth = 995;
         final int panelHeight = 800;
-        
-        final int xGap = 5;
-        final int yGap = 5;
-        
-        int x=0,y=yGap;
-        //int itemCount = 0;
 
-        Color[] colors = {Color.red ,Color.orange ,Color.yellow ,Color.green ,Color.blue ,Color.cyan ,Color.pink};
-        JPanel panel = null;
+        int x,y ;
+
+        List<JPanel> panels = new ArrayList<JPanel>();
+
+        JPanel aPanel = null;
+        x = xGap ; y = panelHeight;
         for (Item item : items) {
-            if (panel == null) {
-                panel = new JPanel();
-                panel.setLayout(null);
-                panel.setBounds(5, 55, panelWidth, panelHeight);
-                panel.setBackground(colors[tabCount]);
-                panel.setVisible(false);
-                tabCount++;
-            }
-
-            x += xGap;
-
-            if ((x+itemWidth)> panelWidth) {
+            if ((y+itemHeight) > panelHeight) {
+                aPanel = new JPanel();
+                aPanel.setLayout(null);
+                aPanel.setBounds(5, 55, 995, 800);
+                aPanel.setVisible(false);
+                aPanel.setName(item.catalogue);
+                panels.add(aPanel);
+                y = yGap;
                 x = xGap;
-                y += yGap;
-                y += itemHeight;
-                if ((y+itemHeight) > panelHeight) {
-                    itemPanels.add(panel);
-                    demo.add(panel);
-
-                    panel = new JPanel();
-                    panel.setLayout(null);
-                    panel.setBounds(5, 55, 995, 800);
-                    panel.setBackground(colors[tabCount]);
-                    panel.setVisible(false);
-
-                    tabCount++;
-                    y = yGap;
-                }
             }
-            
-            CustomerSelection selection = new CustomerSelection(item.title, item.prices);
+            CustomerSelection selection = new CustomerSelection(item.title, item.price ,item.catalogue);
             //itemCount++;
             selection.setBounds(x, y, itemWidth, itemHeight);
             selection.addPropertyChangeListener(this);
             //this.customerSelections.add(selection);
-            panel.add(selection);
+            aPanel.add(selection);
 
             x += itemWidth;
+            x += xGap;
+
+            if ( (x+itemWidth) > panelWidth ) {
+                x = xGap;
+                y += yGap;
+                y += itemHeight;
+            }
         }
-        itemPanels.add(panel);
-        demo.add(panel);
-        
-        /*
-        for(int index = 0;index < tabNumber; index++) {
-            panel = new JPanel();
-            panel.setLayout(null);
-            panel.setBounds(5, 55, 995, 800);
-            panel.setBackground(colors[index]);
 
-            int[] prices = {140,150};
-            ItemInfoObject item = new ItemInfoObject("滷大腸", prices);
-            item.setBounds(1, 1, itemWidth, itemHeight);
-            panel.add(item);
+        return panels;
+    }
 
-            //panel.setVisible(false);
-
-            demo.add(panel);
-            itemPanels.add(panel);
-        }
-*/
-        //int tabNumber = this.itemInfos.size();
-
-        final BigTab tab  = new BigTab(tabCount);
-        tab.setBounds(5, 5, 995, 45);
-        tab.addPropertyChangeListener(this);
-        demo.add(tab);
-
+    private JTable CreateTable () {
         String[] columnNames = {"刪除", "品項 單價 數量", "小計"};
-        this.table = new JTable() {
+        JTable table;
+
+        table = new JTable() {
             private static final long serialVersionUID = 0x276L;
 
             public boolean isCellEditable(int nRow, int nCol) {
@@ -289,155 +430,59 @@ final public class JavaPOS implements PropertyChangeListener {
         table.getColumnModel().getColumn(1).setCellRenderer(cellRenderer);
         table.getColumnModel().getColumn(2).setCellRenderer(cellRenderer);
 
-        JScrollPane scrollPane = new JScrollPane( table );
-        scrollPane.setBounds(1005,5,255,720);
-        demo.add(scrollPane);
-
-        Rectangle tableBounds = scrollPane.getBounds();
-        
-        this.spicyLevel = new SpicyLevel();
-        spicyLevel.setBounds(tableBounds.x,tableBounds.y + tableBounds.height + 5,tableBounds.width, 45);
-        demo.add(spicyLevel);
-
-        demo.setResizable(false);
-        demo.setLocationRelativeTo(null);
-        demo.setVisible(true);
-
-        int firsColumntWidth = table.getWidth() * 20 / 100;
-        int secondColumnWidth = table.getWidth() - firsColumntWidth * 2;
-
-        TableColumnModel columnModel = table.getColumnModel();
-
-        columnModel.getColumn(0).setPreferredWidth(firsColumntWidth);
-        columnModel.getColumn(1).setPreferredWidth(secondColumnWidth);
-        columnModel.getColumn(2).setPreferredWidth(firsColumntWidth);
-
-        table.getTableHeader().setResizingAllowed(false);
-        table.getTableHeader().setReorderingAllowed(false);
-        table.setRowHeight(table.getRowHeight() *2);
-
-        table.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                JTable table = (JTable) e.getSource();
-                int tableColumn = table.columnAtPoint(e.getPoint());
-                int tableRow = table.rowAtPoint(e.getPoint());
-
-                if (tableColumn != 0) {
-                    return;
-                }
-
-                int count = 0;
-                for(JPanel panel: itemPanels) {
-                    Component[] components = panel.getComponents();
-                    int componentNumber = components.length;
-                    for(int index = 0; index < componentNumber; index++) {
-                        CustomerSelection selection = (CustomerSelection)components[index];
-    
-                        for(int itemIndex = 0; itemIndex<selection.itemCount.size(); itemIndex++) {
-                            if (selection.itemCount.get(itemIndex) != 0) {
-                                if(count == tableRow) {
-                                    selection.clearItem(itemIndex);
-                                    new Thread(() -> {
-                                        SelectionChanged();
-                                    }).start();
-                                    return;
-                                }
-                                count++;
-                            }
-                       }
-                    }
-                }
-            }
-        });
-        itemPanels.get(0).setVisible(true);
-
-        JLabel cencelButton = new JLabel("\u274C"); 
-        Rectangle spicyLevelBounds = spicyLevel.getBounds();
-        cencelButton.setBounds(spicyLevelBounds.x ,spicyLevelBounds.y + spicyLevelBounds.height + 15,65, 65);
-        final Border blackline = BorderFactory.createLineBorder(Color.black);
-        cencelButton.setBorder(blackline);
-        cencelButton.setHorizontalAlignment(JLabel.CENTER);
-        cencelButton.setFont(new Font("Serif", Font.PLAIN, 37));
-        cencelButton.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                new Thread(() -> {
-                    ClearTransation();
-                }).start();
-            }
-        });
-
-        demo.add(cencelButton);
-
-        this.confirmButton = new JLabel("0(0)"); 
-        this.confirmButton.setBounds(spicyLevelBounds.x + 70 ,spicyLevelBounds.y + spicyLevelBounds.height + 15,spicyLevelBounds.width - 70, 65);
-        this.confirmButton.setBorder(blackline);
-        this.confirmButton.setHorizontalAlignment(JLabel.CENTER);
-        this.confirmButton.setFont(new Font("Serif", Font.PLAIN, 39));
-        this.confirmButton.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                Boolean toPrint = false;
-
-                for(JPanel panel: itemPanels) {
-                    Component[] components = panel.getComponents();
-                    int componentNumber = components.length;
-                    for(int index = 0; index < componentNumber; index++) {
-                        CustomerSelection selection = (CustomerSelection)components[index];
-    
-                        for(int itemIndex = 0; itemIndex<selection.itemCount.size(); itemIndex++) {
-                            int number = selection.itemCount.get(itemIndex);
-                            if( number > 0 ) {
-                                toPrint = true;
-                                break;
-                            }
-                        }
-                        if(toPrint) {
-                            break;
-                        }
-                    }
-                    if(toPrint) {
-                        break;
-                    }
-                }
-
-                if(false == toPrint) {
-                    return;
-                }
-
-                final Date date = new Date();
-                
-                SaveToFile(date);
-                DoPrinting(date);
-
-                ClearTransation();
-            }
-        });
-        
-        demo.add(confirmButton);
+        return table;
     }
 
-    private void ClearTransation() {
-        new Thread(() -> {
+    private void DoPrinting(Date date) {
+        List<String> content = new ArrayList<>();
+        int subTotal ,totalPrice ;
+        String transation2Printer = "";
+        List<String> catalogues = new ArrayList<String>();
+        
+        for(JPanel panel: itemPanels) {
+            Component[] components = panel.getComponents();
+            int componentNumber = components.length;
+            for(int index = 0; index < componentNumber; index++) {
+                CustomerSelection selection = (CustomerSelection)components[index];
+                if( selection.amount > 0 ) {
+                    if (catalogues.contains(selection.catalogue)) {
+                        continue;
+                    }
+                    catalogues.add(selection.catalogue);
+                }
+            }
+        }
+
+        totalPrice = 0;
+        OutputPrinter printer;
+        for(String subCatalogue : catalogues) {
+            content.clear();
             for(JPanel panel: itemPanels) {
                 Component[] components = panel.getComponents();
                 int componentNumber = components.length;
                 for(int index = 0; index < componentNumber; index++) {
                     CustomerSelection selection = (CustomerSelection)components[index];
-                    selection.clearAll();
+                    if(selection.catalogue != subCatalogue) {
+                        continue;
+                    }
+                    if( selection.amount > 0 ) {   
+                        subTotal = selection.amount * selection.price;
+    
+                        transation2Printer = selection.title+"("+String.valueOf(selection.price)+")"+",數量:"+String.valueOf(selection.amount)+",小計:"+String.valueOf(subTotal);
+                        content.add(transation2Printer);
+                        totalPrice += subTotal;
+                    }
                 }
             }
-    
-            DefaultTableModel tableModel = (DefaultTableModel) this.table.getModel();
-            tableModel.setRowCount(0);
-            tableModel.fireTableDataChanged();
-            this.confirmButton.setText("0(0)");
-            this.spicyLevel.set(0);
-        }).start();
-    }
+            if(content.size() < 1) {
+                continue;
+            }
+            content.add("總價:"+ String.valueOf(totalPrice));
+            content.add(this.toGoOrNot.get());
 
-    private void DoPrinting(Date date) {
+            printer = new OutputPrinter(subCatalogue, content ,date);
+            printer.RawWriteToESC();
+        }
         //final int printWidthDots = 80 / 25.4 * 203 = 639;
         // font size 128 ,MaxDescent 26
 
@@ -478,10 +523,6 @@ final public class JavaPOS implements PropertyChangeListener {
         this.StringToESC(dateTimeString, "標楷體" , contentFontSize);
 
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream( );
-*/
-        int number,price ,subTotal ,totalPrice ;
-        String transation2Printer = "";
-        List<String> content = new ArrayList<>();
 
         totalPrice = 0;
         for(JPanel panel: itemPanels) {
@@ -489,25 +530,25 @@ final public class JavaPOS implements PropertyChangeListener {
             int componentNumber = components.length;
             for(int index = 0; index < componentNumber; index++) {
                 CustomerSelection selection = (CustomerSelection)components[index];
-                for(int itemIndex = 0; itemIndex<selection.itemCount.size(); itemIndex++) {
-                    number = selection.itemCount.get(itemIndex);
-                    if( number > 0 ) {
-                        price = selection.priceList.get(itemIndex);
-                        subTotal = number * price;
+                number = selection.amount;
+                if( number > 0 ) {
+                    price = selection.price;
+                    subTotal = number * price;
 
-                        transation2Printer = selection.title+"("+String.valueOf(price)+")"+",數量:"+String.valueOf(number)+",小計:"+String.valueOf(subTotal);
-                        content.add(transation2Printer);
-                        totalPrice += subTotal;
-                    }
+                    transation2Printer = selection.title+"("+String.valueOf(price)+")"+",數量:"+String.valueOf(number)+",小計:"+String.valueOf(subTotal);
+                    content.add(transation2Printer);
+                    totalPrice += subTotal;
                 }
-            }
+        }
         }
         content.add("總價:"+ String.valueOf(totalPrice));
 
-        content.add(this.spicyLevel.get());
-
+        //content.add(this.spicyLevel.get());
+        content.add(this.toGoOrNot.get());
+        
         OutputPrinter printer = new OutputPrinter("柯黑鴨", content ,date);
         printer.RawWriteToESC();
+        */
     }
 
     private void StringToESC(String string, String fontName , int fontSize) {
@@ -609,20 +650,19 @@ final public class JavaPOS implements PropertyChangeListener {
                 int componentNumber = components.length;
                 for(int index = 0; index < componentNumber; index++) {
                     CustomerSelection selection = (CustomerSelection)components[index];
-                    for(int itemIndex = 0; itemIndex<selection.itemCount.size(); itemIndex++) {
-                        number = selection.itemCount.get(itemIndex);
-                        if( number > 0 ) {
-                            price = selection.priceList.get(itemIndex);
-                            subTotal = number * price;
+                    number = selection.amount;
+                    if( number > 0 ) {
+                        price = selection.price;
+                        subTotal = number * price;
 
-                            transation2csv = selection.title+"("+String.valueOf(price)+")"+","+String.valueOf(number)+","+String.valueOf(subTotal);
-                            csvWriter.write(transation2csv+"\n");
-                            //totalPrice += subTotal;
-                        }
+                        transation2csv = selection.title+"("+String.valueOf(price)+")"+","+String.valueOf(number)+","+String.valueOf(subTotal);
+                        csvWriter.write(transation2csv+"\n");
+                        //totalPrice += subTotal;
                     }
-                }
             }
-            csvWriter.write(spicyLevel.get() +"\n");
+            }
+            //csvWriter.write(spicyLevel.get() +"\n");
+            csvWriter.write(toGoOrNot.get() +"\n");
 
             csvWriter.close();
             csvFile.close();
@@ -649,17 +689,15 @@ final public class JavaPOS implements PropertyChangeListener {
             for(int index = 0; index < componentNumber; index++) {
                 CustomerSelection selection = (CustomerSelection)components[index];
 
-                for(int itemIndex = 0; itemIndex<selection.itemCount.size(); itemIndex++) {
-                    int number = selection.itemCount.get(itemIndex);
-                    if( number > 0 ) {
-                        data[0] = "\u274C";
-                        data[1] = selection.title+"("+ String.valueOf(selection.priceList.get(itemIndex))+")"+" * "+String.valueOf(number);
-                        data[2] = String.valueOf(selection.priceList.get(itemIndex)*number);
+                int number = selection.amount;
+                if( number > 0 ) {
+                    data[0] = "\u274C";
+                    data[1] = selection.title+"("+ String.valueOf(selection.price)+")"+" * "+String.valueOf(number);
+                    data[2] = String.valueOf(selection.price*number);
 
-                        tableModel.addRow(data);
-                        selectedItems++;
-                        totalMoney += (selection.priceList.get(itemIndex)*number);
-                    }
+                    tableModel.addRow(data);
+                    selectedItems++;
+                    totalMoney += (selection.price*number);
                 }
             }
 
@@ -670,10 +708,13 @@ final public class JavaPOS implements PropertyChangeListener {
     }
     @Override
     public void propertyChange(final PropertyChangeEvent evt) {
+        final Color[] colors = {new Color(53,0,0) ,new Color(0,0,53) ,new Color(0,53,0), new Color(102,102,102) ,Color.orange ,Color.yellow ,Color.green , Color.pink};
+
         if (evt.getPropertyName() == "TabSelectedIndex") {
             int tabIndex = (int)evt.getNewValue();
 
             for (JPanel panel : this.itemPanels) {
+                panel.setBackground(colors[tabIndex]);
                 panel.setVisible(false);
             }
 
