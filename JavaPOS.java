@@ -62,12 +62,13 @@ final public class JavaPOS implements PropertyChangeListener {
     //BigTab tab;  
 
     List<JPanel> itemPanels = new ArrayList<JPanel>();
-    List<CustomerSelection> customerSelections = new ArrayList<CustomerSelection>();
+    //List<CustomerSelection> customerSelections = new ArrayList<CustomerSelection>();
     
     JTable table;
+    JTextArea postScript;
     JLabel confirmButton;
     //SpicyLevel spicyLevel;
-    SisBroTradeName sisBroTradeName;
+    //SisBroTradeName sisBroTradeName;
     ToGoOrNot toGoOrNot;
     public static void main(final String[] args) {
         String desktopFolder = System.getProperty("user.home") + "/Desktop";
@@ -128,14 +129,25 @@ final public class JavaPOS implements PropertyChangeListener {
         tab.setBounds(5, 5, 995, 45);
         tab.addPropertyChangeListener(this);
         mainFrame.add(tab);
-        
+        //
+        Rectangle itemPanelBounds = this.itemPanels.get(0).getBounds();
+        postScript = new JTextArea();
+        JScrollPane postScriptScrollPane = new JScrollPane(postScript);
+        postScriptScrollPane.setBounds(itemPanelBounds.x,itemPanelBounds.y + itemPanelBounds.height + 5,itemPanelBounds.width, 125);
+        postScript.setFont(new Font("Serif", Font.BOLD, 18));
+        postScript.setForeground(Color.BLUE);
+
+        mainFrame.add(postScriptScrollPane);
+
         //
         this.table= this.CreateTable();
-        JScrollPane scrollPane = new JScrollPane( this.table );
-        scrollPane.setBounds(1005,5,255,720);
-        //scrollPane.setBounds(1005,5,255,660);
-        mainFrame.add(scrollPane);
+        JScrollPane tableScrollPane = new JScrollPane( this.table );
+        tableScrollPane.setBounds(1005,5,255,720);
+        //tableScrollPane.setBounds(1005,5,255,600);
+        mainFrame.add(tableScrollPane);
 
+        Rectangle tableBounds = tableScrollPane.getBounds();
+        //
         mainFrame.setResizable(false);
         mainFrame.setLocationRelativeTo(null);
         mainFrame.setVisible(true);
@@ -186,7 +198,8 @@ final public class JavaPOS implements PropertyChangeListener {
             }
         });
 
-        Rectangle tableBounds = scrollPane.getBounds();
+        //Rectangle postscriptBounds = postScriptScrollPane.getBounds();
+
         this.toGoOrNot = new ToGoOrNot();
         toGoOrNot.setBounds(tableBounds.x,tableBounds.y + tableBounds.height + 5,tableBounds.width, 45);
         mainFrame.add(toGoOrNot);
@@ -253,25 +266,6 @@ final public class JavaPOS implements PropertyChangeListener {
         });
         
         mainFrame.add(confirmButton);
-        /*
-        
-
-
-        
-        this.sisBroTradeName = new SisBroTradeName();
-        sisBroTradeName.setBounds(tableBounds.x,tableBounds.y + tableBounds.height + 5,tableBounds.width, 45);
-        demo.add(sisBroTradeName);
-
-
-        demo.setResizable(false);
-        demo.setLocationRelativeTo(null);
-        demo.setVisible(true);
-
-        
-        itemPanels.get(0).setVisible(true);
-
-        
-        */
     }
 
     private void ClearTransation() {
@@ -338,7 +332,7 @@ final public class JavaPOS implements PropertyChangeListener {
         final int itemWidth = 320;
         final int itemHeight = 151;
         final int panelWidth = 995;
-        final int panelHeight = 800;
+        final int panelHeight = 670;
 
         int x,y ;
 
@@ -350,7 +344,7 @@ final public class JavaPOS implements PropertyChangeListener {
             if ((y+itemHeight) > panelHeight) {
                 aPanel = new JPanel();
                 aPanel.setLayout(null);
-                aPanel.setBounds(5, 55, 995, 800);
+                aPanel.setBounds(5, 55, panelWidth, panelHeight);
                 aPanel.setVisible(false);
                 aPanel.setName(item.catalogue);
                 panels.add(aPanel);
@@ -434,11 +428,14 @@ final public class JavaPOS implements PropertyChangeListener {
     }
 
     private void DoPrinting(Date date) {
-        List<String> content = new ArrayList<>();
-        int subTotal ,totalPrice ;
-        String transation2Printer = "";
+
+        String postscriptString = this.postScript.getText();
+
+        List<String> content = new ArrayList<String>();
         List<String> catalogues = new ArrayList<String>();
-        
+        List<CustomerSelection> catalogueContents = new ArrayList<CustomerSelection>();
+        OutputPrinter printer = new OutputPrinter(date);
+
         for(JPanel panel: itemPanels) {
             Component[] components = panel.getComponents();
             int componentNumber = components.length;
@@ -453,10 +450,8 @@ final public class JavaPOS implements PropertyChangeListener {
             }
         }
 
-        totalPrice = 0;
-        OutputPrinter printer;
         for(String subCatalogue : catalogues) {
-            content.clear();
+            catalogueContents.clear();
             for(JPanel panel: itemPanels) {
                 Component[] components = panel.getComponents();
                 int componentNumber = components.length;
@@ -465,103 +460,27 @@ final public class JavaPOS implements PropertyChangeListener {
                     if(selection.catalogue != subCatalogue) {
                         continue;
                     }
-                    if( selection.amount > 0 ) {   
-                        subTotal = selection.amount * selection.price;
-    
-                        transation2Printer = selection.title+"("+String.valueOf(selection.price)+")"+",數量:"+String.valueOf(selection.amount)+",小計:"+String.valueOf(subTotal);
-                        content.add(transation2Printer);
-                        totalPrice += subTotal;
+                    if( selection.amount < 1 ) {   
+                        continue;
                     }
+                    //subTotal = selection.amount * selection.price;
+    
+                    //transation2Printer = selection.title+"("+String.valueOf(selection.price)+")"+",數量: "+String.valueOf(selection.amount)+",小計: "+String.valueOf(subTotal);
+                    //catalogueContent.add(transation2Printer);
+                    catalogueContents.add(selection);
                 }
             }
-            if(content.size() < 1) {
+            if(catalogueContents.size() < 1) {
                 continue;
             }
-            content.add("總價:"+ String.valueOf(totalPrice));
-            content.add(this.toGoOrNot.get());
 
-            printer = new OutputPrinter(subCatalogue, content ,date);
-            printer.RawWriteToESC();
+            //
+            printer.addContent(subCatalogue ,catalogueContents);
+            
         }
-        //final int printWidthDots = 80 / 25.4 * 203 = 639;
-        // font size 128 ,MaxDescent 26
-
-        //final int printWidthDots = 630;
-        /*
-        final int titleFontSize = 32;
-        final int contentFontSize = 24;
-
-        //title image
-        this.StringToESC("柯黑鴨", "標楷體" , titleFontSize);
-
-        int number,price ,subTotal ;
-        String transation2Printer = "";
-        
-        for(JPanel panel: itemPanels) {
-            Component[] components = panel.getComponents();
-            int componentNumber = components.length;
-            for(int index = 0; index < componentNumber; index++) {
-                CustomerSelection selection = (CustomerSelection)components[index];
-                for(int itemIndex = 0; itemIndex<selection.itemCount.size(); itemIndex++) {
-                    number = selection.itemCount.get(itemIndex);
-                    if( number > 0 ) {
-                        price = selection.priceList.get(itemIndex);
-                        subTotal = number * price;
-
-                        transation2Printer = selection.title+"("+String.valueOf(price)+")"+",數量:"+String.valueOf(number)+",小計:"+String.valueOf(subTotal);
-                        this.StringToESC(transation2Printer, "標楷體" , contentFontSize);
-                    }
-                }
-            }
-        }
-
-        String spyceLevel = this.spicyLevel.get();
-        this.StringToESC(spyceLevel, "標楷體" , contentFontSize);
-
-        SimpleDateFormat formatter = new SimpleDateFormat("yyyy年MM月dd日HH點mm分ss秒"); 
-        String dateTimeString = formatter.format(date);
-        this.StringToESC(dateTimeString, "標楷體" , contentFontSize);
-
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream( );
-
-        totalPrice = 0;
-        for(JPanel panel: itemPanels) {
-            Component[] components = panel.getComponents();
-            int componentNumber = components.length;
-            for(int index = 0; index < componentNumber; index++) {
-                CustomerSelection selection = (CustomerSelection)components[index];
-<<<<<<< HEAD
-                number = selection.amount;
-                if( number > 0 ) {
-                    price = selection.price;
-                    subTotal = number * price;
-
-                    transation2Printer = selection.title+"("+String.valueOf(price)+")"+",數量:"+String.valueOf(number)+",小計:"+String.valueOf(subTotal);
-                    content.add(transation2Printer);
-                    totalPrice += subTotal;
-=======
-                for(int itemIndex = 0; itemIndex<selection.itemCount.size(); itemIndex++) {
-                    number = selection.itemCount.get(itemIndex);
-                    if( number > 0 ) {
-                        price = selection.priceList.get(itemIndex);
-                        subTotal = number * price;
-
-                        transation2Printer = selection.title+"("+String.valueOf(price)+")"+",數量:"+String.valueOf(number)+",小計:"+String.valueOf(subTotal)+"元";
-                        content.add(transation2Printer);
-                        totalPrice += subTotal;
-                    }
->>>>>>> 95b1bfdc48ef2e7c4dc210babbf31fe3c1212535
-                }
-        }
-        }
-        content.add("總價:"+ String.valueOf(totalPrice)+"元");
-
-        //content.add(this.spicyLevel.get());
-        content.add(this.toGoOrNot.get());
-        
-        OutputPrinter printer = new OutputPrinter("柯黑鴨", content ,date);
+        printer.setStayOrToGo(this.toGoOrNot.get());
+        printer.setPostscript(this.postScript.getText());
         printer.RawWriteToESC();
-        */
     }
 
     private void StringToESC(String string, String fontName , int fontSize) {
