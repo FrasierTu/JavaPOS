@@ -65,12 +65,12 @@ public class CustomerSelection extends JPanel implements ComponentListener {
         final Border blackline = BorderFactory.createLineBorder(Color.black);
         final Font labelFont = new Font("Serif", Font.BOLD, 29);
         final JLabel dummyLabel = new JLabel("我");
+
+        dummyLabel.setFont(labelFont);
         
         priceLabel = new JLabel(String.valueOf(this.price));// +"\t" + levels[0]+ "\t" + "\u25B6");
         amountLabel = new JLabel(String.valueOf(this.amount));// +"\t" + levels[0]+ "\t" + "\u25B6");
 
-        dummyLabel.setFont(labelFont);
-        
         final int charWidth = dummyLabel.getFontMetrics(labelFont).stringWidth(dummyLabel.getText());
         int charHeight = dummyLabel.getFontMetrics(labelFont).getHeight() -1 ;
 
@@ -93,13 +93,13 @@ public class CustomerSelection extends JPanel implements ComponentListener {
         priceLabel.setFont(labelFont);
         priceLabel.setBounds(labelX, labelY, labelWidth, labelHeight);
         priceLabel.setHorizontalAlignment(JLabel.CENTER);
-        //itemPriceLabel.setBorder(blackline);
+        //priceLabel.setBorder(blackline);
         this.add(priceLabel);
 
         labelX = 5;
-        labelY = priceLabel.getLocation().y + priceLabel.getHeight() + 10;
-        labelWidth = charWidth * 2;
-        labelHeight = charHeight;
+        labelWidth = charWidth * 3;
+        labelHeight = charHeight * 2;
+        labelY = height - (labelHeight + 10);//priceLabel.getLocation().y + priceLabel.getHeight() + 10;
         final JLabel minus = new JLabel("\u2212");// +"\t" + levels[0]+ "\t" + "\u25B6");
         minus.setFont(labelFont);
         minus.setBounds(labelX, labelY, labelWidth, labelHeight+5);
@@ -128,10 +128,10 @@ public class CustomerSelection extends JPanel implements ComponentListener {
             }
         });
 
-        labelWidth = charWidth * 2;
+        labelWidth = charWidth * 3;
+        labelHeight = charHeight * 2;
         labelX = width - 5 - labelWidth;
-        labelY = priceLabel.getLocation().y + priceLabel.getHeight() + 10;
-        labelHeight = charHeight;
+        labelY = height - (labelHeight + 10);//priceLabel.getLocation().y + priceLabel.getHeight() + 10;
         final JLabel plus = new JLabel("\uFF0B");// +"\t" + levels[0]+ "\t" + "\u25B6");
         plus.setFont(labelFont);
         plus.setBounds(labelX, labelY, labelWidth, labelHeight+5);

@@ -19,5 +19,7 @@ Section "InputClass"
     Driver "evdev"
 EndSection
 ```
-		
+
+## v2.2.0
+1. 為了raspberry pi 修改元件尺寸
 

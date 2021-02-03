@@ -126,7 +126,7 @@ final public class JavaPOS implements PropertyChangeListener {
         //demo.add(panel);
 
         final BigTab tab  = new BigTab(sisPanels.size()+broPanels.size());
-        tab.setBounds(5, 5, 995, 45);
+        tab.setBounds(5, 5, 880, 60);
         tab.addPropertyChangeListener(this);
         mainFrame.add(tab);
         //
@@ -142,7 +142,7 @@ final public class JavaPOS implements PropertyChangeListener {
         //
         this.table= this.CreateTable();
         JScrollPane tableScrollPane = new JScrollPane( this.table );
-        tableScrollPane.setBounds(1005,5,255,720);
+        tableScrollPane.setBounds(890,5,370,720);
         //tableScrollPane.setBounds(1005,5,255,600);
         mainFrame.add(tableScrollPane);
 
@@ -326,12 +326,12 @@ final public class JavaPOS implements PropertyChangeListener {
     }
 
     final private List<JPanel> ItemsToPanel(List<Item> items) {
-        final int xGap = 8;
-        final int yGap = 8;
+        final int xGap = 5;
+        final int yGap = 5;
 
-        final int itemWidth = 320;
+        final int itemWidth = 280;
         final int itemHeight = 151;
-        final int panelWidth = 995;
+        final int panelWidth = 880;
         final int panelHeight = 670;
 
         int x,y ;
@@ -344,7 +344,7 @@ final public class JavaPOS implements PropertyChangeListener {
             if ((y+itemHeight) > panelHeight) {
                 aPanel = new JPanel();
                 aPanel.setLayout(null);
-                aPanel.setBounds(5, 55, panelWidth, panelHeight);
+                aPanel.setBounds(5, 70, panelWidth, panelHeight);
                 aPanel.setVisible(false);
                 aPanel.setName(item.catalogue);
                 panels.add(aPanel);
@@ -390,14 +390,11 @@ final public class JavaPOS implements PropertyChangeListener {
         DefaultTableCellRenderer cellRenderer = new DefaultTableCellRenderer() {
             private static final long serialVersionUID = 0x3476L;
 
-            final Font cellFont = new Font("Serif", Font.PLAIN, 23);
+            final Font cellFont = new Font("Serif", Font.PLAIN, 25);
         
             @Override
-            public Component getTableCellRendererComponent(JTable table,
-                    Object value, boolean isSelected, boolean hasFocus,
-                    int row, int column) {
-                super.getTableCellRendererComponent(table, value, isSelected, hasFocus,
-                        row, column);
+            public Component getTableCellRendererComponent(JTable table,  Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+                super.getTableCellRendererComponent(table, value, isSelected, hasFocus,  row, column);
                 setFont(cellFont);
                 return this;
             }
@@ -409,14 +406,11 @@ final public class JavaPOS implements PropertyChangeListener {
         cellRenderer = new DefaultTableCellRenderer() {
             private static final long serialVersionUID = 0x3479L;
 
-            final Font cellFont = new Font("Serif", Font.PLAIN, 17);
+            final Font cellFont = new Font("Serif", Font.PLAIN, 19);
         
             @Override
-            public Component getTableCellRendererComponent(JTable table,
-                    Object value, boolean isSelected, boolean hasFocus,
-                    int row, int column) {
-                super.getTableCellRendererComponent(table, value, isSelected, hasFocus,
-                        row, column);
+            public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+                super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
                 setFont(cellFont);
                 return this;
             }
