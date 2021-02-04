@@ -25,17 +25,24 @@ public class OutputPrinter implements Printable {
 
     private Date date;
     private List<String> titles = new ArrayList<String>();
-    private List<List<CustomerSelection>> arrayOfContent = new ArrayList<List<CustomerSelection>>();
+    private List<List<CustomerSelection>> arrayOfContent = new ArrayList<>();
     private String postscript = "";
     private String stayOrToGo = "";
-
+    private int catalogueCounter = 0;
+    
     public OutputPrinter(Date date) {
         this.date = date;
     }
 
     public void addContent(String catalogue ,List<CustomerSelection> content) {
         this.titles.add(catalogue);
-        this.arrayOfContent.add(content);
+        
+        this.arrayOfContent.add(new ArrayList<CustomerSelection>());
+
+        for(CustomerSelection selection : content) {
+            this.arrayOfContent.get(catalogueCounter).add(selection);
+        }
+        catalogueCounter++;
     }
 
     public void setStayOrToGo(String stayOrToGoString) {
@@ -64,12 +71,12 @@ public class OutputPrinter implements Printable {
 
             int totalPrice;
             totalPrice = 0;
+            String title;
+            List<CustomerSelection> content = new ArrayList<CustomerSelection>();
             for(int index = 0; index < this.titles.size() ;index++) {
-                String title;
-                List<CustomerSelection> content;
-
+                content.clear();
                 title = this.titles.get(index);
-                content = arrayOfContent.get(index);
+                content.addAll(arrayOfContent.get(index));
 
                 escCommands.write(0x1d);
                 escCommands.write('!');//Double on
@@ -84,6 +91,10 @@ public class OutputPrinter implements Printable {
                 escCommands.write(0);
                 escCommands.write('\n');
 
+                escCommands.write("品項\t\t\t數量\t\t金額\n".getBytes("Big5"));
+                //escCommands.write("品項                      數量              金額\n".getBytes("Big5"));
+                escCommands.write("------------------------------------------------\n".getBytes("Big5"));
+
                 for(CustomerSelection selection : content) {
                     String transation2Printer;
                     int subTotal;
@@ -91,26 +102,34 @@ public class OutputPrinter implements Printable {
                     subTotal = selection.amount * selection.price;
                     totalPrice += subTotal;
 
-                    transation2Printer = selection.title+"("+String.valueOf(selection.price)+")"+",數量: "+String.valueOf(selection.amount)+",小計: "+String.valueOf(subTotal);
-                   
+                    //transation2Printer = selection.title+"("+String.valueOf(selection.price)+")"+",數量: "+String.valueOf(selection.amount)+",小計: "+String.valueOf(subTotal);
+                    switch(selection.title.length()) {
+                        case 6:
+                        case 7:
+                            transation2Printer = selection.title+"\t\t"+String.valueOf(selection.amount)+"\t\t"+String.valueOf(subTotal);
+                            break;
+                        case 4:
+                        case 5:
+                            transation2Printer = selection.title+"\t\t"+String.valueOf(selection.amount)+"\t\t"+String.valueOf(subTotal);
+                            break;
+                        default:
+                            transation2Printer = selection.title+"\t\t\t"+String.valueOf(selection.amount)+"\t\t"+String.valueOf(subTotal);
+                            break;
+                    }
+
                     escCommands.write(transation2Printer.getBytes("Big5"));
                     escCommands.write("\n".getBytes("Big5"));
                 }
-                escCommands.write("------------------------".getBytes("Big5"));
-                escCommands.write('\n');
+                escCommands.write("------------------------------------------------\n".getBytes("Big5"));
             }
 
-            String totalPriceString = "總價: "+ String.valueOf(totalPrice);
-
+            String totalPriceString = "總價\t\t\t\t\t"+ String.valueOf(totalPrice)+"\n";
             escCommands.write(totalPriceString.getBytes("Big5"));
-            escCommands.write("\n".getBytes("Big5"));
-
             escCommands.write(this.stayOrToGo.getBytes("Big5"));
             escCommands.write("\n".getBytes("Big5"));
+            escCommands.write("------------------------------------------------\n".getBytes("Big5"));
             String[] postscriptArray = this.postscript.split("\n");
             if (postscriptArray.length > 0) {
-                escCommands.write("------------------------".getBytes("Big5"));
-                escCommands.write('\n');
                 for(String aString : postscriptArray) {
                     if (aString.length() > 0) {
                         escCommands.write(aString.getBytes("Big5"));
@@ -118,8 +137,7 @@ public class OutputPrinter implements Printable {
                     }
                 }   
             }
-            escCommands.write("**************************\n".getBytes("Big5"));
-            SimpleDateFormat formatter = new SimpleDateFormat("yyyy年MM月dd日HH點mm分ss秒"); 
+            SimpleDateFormat formatter = new SimpleDateFormat("yyyy/MM/dd-HH:mm:ss"); 
             String dateTimeString = formatter.format(date);
             escCommands.write(dateTimeString.getBytes("Big5"));
 

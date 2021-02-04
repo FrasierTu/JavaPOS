@@ -20,6 +20,10 @@ Section "InputClass"
 EndSection
 ```
 
+## v2.3.0
+1. OutputPrinter.java 修改資料結構，以正確存取資料
+2. 列印版面
+
 ## v2.2.0
-1. 為了raspberry pi 修改元件尺寸
+1. 為了raspberry pi 顯示修改元件尺寸
 
