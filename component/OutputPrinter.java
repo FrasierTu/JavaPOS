@@ -140,6 +140,8 @@ public class OutputPrinter implements Printable {
             SimpleDateFormat formatter = new SimpleDateFormat("yyyy/MM/dd-HH:mm:ss"); 
             String dateTimeString = formatter.format(date);
             escCommands.write(dateTimeString.getBytes("Big5"));
+            escCommands.write("\n".getBytes("Big5"));
+            escCommands.write("謝謝光臨\n歡迎再來".getBytes("Big5"));
 
             escCommands.write(0x1c);
             escCommands.write('.');//kanji off

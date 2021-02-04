@@ -19,6 +19,8 @@ Section "InputClass"
     Driver "evdev"
 EndSection
 ```
+## v2.4.0
+1. 列印歡迎詞於結尾
 
 ## v2.3.0
 1. OutputPrinter.java 修改資料結構，以正確存取資料
